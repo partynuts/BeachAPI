@@ -1,0 +1,24 @@
+{
+  "name": "BeachAPI",
+  "version": "1.0.0",
+  "description": "backend for BeachApp",
+  "main": "index.js",
+  "repository": "git@github.com:partynuts/BeachAPI.git",
+  "author": "proghany <proghany@ebay.com>",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "chai": "^4.2.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "mocha": "^7.1.0",
+    "morgan": "^1.9.1",
+    "pg": "^7.18.2",
+    "require-dir-all": "^0.4.15",
+    "supertest": "^4.0.2"
+  }
+}
