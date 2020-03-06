@@ -28,6 +28,7 @@ module.exports = async ({ database = "beachapp", connectionString } = {}) => {
 
   await global.client.connect().catch(console.log);
 
+  app.use(cors());
 
   Object.values(requireAll("./controllers")).forEach(c => app.use(c));
 

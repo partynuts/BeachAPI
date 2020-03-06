@@ -1,7 +1,6 @@
 module.exports = {
 
   ensureTable() {
-    console.log("DATENBANKEN")
     return global.client.query(`
         CREATE TABLE IF NOT EXISTS users
         (

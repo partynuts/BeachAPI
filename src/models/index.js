@@ -1,5 +1,6 @@
 const User = require('./user-model');
-const models = [User];
+const Events = require('./event-model');
+const models = [User, Events];
 
 module.exports = {
   User,
