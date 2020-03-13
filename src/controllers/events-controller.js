@@ -14,17 +14,20 @@ controller.post("/events", async (req, res) => {
 
 });
 
-controller.patch("/events/signup", async (req, res) => {
+controller.post("/events/:eventId/signup", async (req, res) => {
   console.log("-------SIGNING UP FOR EVENT IN CONTROLLER-------", req.body)
 
-  if (!req.body.userId || !req.body.eventId) {
+  if (!req.body.userId || !req.params.eventId) {
     return res.sendStatus(400)
   }
-  const foundEvent = await findEventById(req.body.eventId);
+  const foundEvent = await findEventById(req.params.eventId);
+  if (!foundEvent) {
+    return res.sendStatus(404)
+  }
   if (foundEvent.participants && foundEvent.participants.includes(req.body.userId)) {
     return res.status(200).json({msg: "User is already signed up!"})
   }
-  const newParticipant = await signUpUserForEvent(req.body.userId, req.body.eventId);
+  const newParticipant = await signUpUserForEvent(req.body.userId, req.params.eventId);
   console.log("NEW PARTICIPANTS", newParticipant);
   res.status(201).json(newParticipant)
 
