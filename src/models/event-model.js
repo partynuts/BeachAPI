@@ -42,6 +42,7 @@ const Event = module.exports = {
         LIMIT 1
     `)
       .then(res => {
+        console.log("-------------Vergangenes EVENT----------------", res.rows, "---------------------------")
         return res.rows;
       })
   },
@@ -54,7 +55,7 @@ const Event = module.exports = {
         ORDER BY event_date ASC
     `)
       .then(res => {
-        console.log("-------------EVENTS NACH JETZT----------------", res.rows)
+        console.log("-------------EVENTS NACH JETZT----------------", res.rows, "---------------------------")
         return res.rows.slice(0, 2);
       })
   },

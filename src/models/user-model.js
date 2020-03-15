@@ -41,6 +41,17 @@ module.exports = {
       })
   },
 
+  findUserById(participantsIds) {
+    return global.client.query(`
+                SELECT *
+                FROM users
+                WHERE id IN (${participantsIds.join()})
+      `)
+      .then(res => {
+        return res.rows;
+      })
+  },
+
   findUserByEmailAndUsername(username, email) {
     return global.client.query(`
                 SELECT *
