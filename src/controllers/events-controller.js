@@ -2,7 +2,7 @@ const  { findUserById } = require("../models/user-model");
 
 const { Router } = require("express");
 const controller = Router();
-const { createEvent, findMostRecentPastEvent, findNextTwoEvents, signUpUserForEvent, findEventById } = require("../models/event-model")
+const { createEvent, findMostRecentPastEvent, findNextTwoEvents, signUpUserForEvent, cancelUserFromEvent, findEventById } = require("../models/event-model")
 
 controller.post("/events", async (req, res) => {
   console.log("-------CREATING EVENT IN CONTROLLER-------", req.body)
@@ -37,6 +37,19 @@ controller.post("/events/:eventId/signup", async (req, res) => {
   res.status(201).json(newParticipant)
 });
 
+controller.post("/events/:eventId/cancel", async (req, res) => {
+  console.log("-------CANCELLING FOR EVENT IN CONTROLLER-------", req.body)
+
+  if (!req.body.userId || !req.params.eventId) {
+    return res.sendStatus(400)
+  }
+
+  const updatedParticipants = await cancelUserFromEvent(req.body.userId, req.params.eventId);
+  const userData = await findUserById(updatedParticipants.participants);
+  updatedParticipants.participants = userData.map(user => user.username);
+  res.status(200).json(updatedParticipants)
+});
+
 controller.get("/events", async (req, res) => {
   console.log("-------GETTING EVENT IN CONTROLLER-------")
 
@@ -65,24 +78,7 @@ controller.get("/events", async (req, res) => {
 
   console.log("EVENT DATA IN HOME",eventData);
   return res.status(200).json(eventData)
-  //
-  // if (pastEvent[0].participants === null || nextEvents[0].participants === null || nextEvents[1].participants === null) {
-  //   console.log("NO PARTICIPANTS")
-  //   const eventsData = {pastEvent, nextEvents};
-  //
-  //   console.log("EVENTS DATA IN GETTING EVENTS", eventsData);
-  //   return res.status(200).json(eventsData)
-  // } else {
-  //   console.log("LOOKING FOR PARTICIPANTS", pastEvent, "NEXT EVENTS", nextEvents)
-  //   const pastEventUserData = await findUserById(pastEvent[0].participants);
-  //   // const nextEventsUserData = await findUserById(nextEvents.participants);
-  //   pastEvent.participants = pastEventUserData.map(user => user.username);
-  //   // nextEvents.participants = nextEventsUserData.map(user => user.username);
-  //
-  //   const eventsData = {pastEvent, nextEvents};
-  //   console.log("EVENTS DATA IN GETTING EVENTS", eventsData);
-  //   return res.status(200).json(eventsData)
-  // }
+
 });
 
 module.exports = controller;

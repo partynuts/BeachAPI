@@ -60,7 +60,22 @@ const Event = module.exports = {
       })
   },
 
-  // uncaughtException: malformed array literal: "28"
+  cancelUserFromEvent(userId, eventId) {
+    console.log("Cancelling FOR EVENT IN DB", userId, eventId)
+    return Event.findEventById(eventId).then(res => {
+      return global.client.query(`
+          UPDATE events
+          SET participants = array_remove(participants, $1)
+          WHERE id = $2
+          RETURNING *
+      `, [userId, eventId])
+        .then(res => {
+          console.log("NEUE TEILNEHMER", res.rows[0])
+          return res.rows[0]
+        })
+    })
+  },
+
   signUpUserForEvent(userId, eventId) {
     console.log("SIGNING UP FOR EVENT IN DB", userId, eventId)
     return Event.findEventById(eventId).then(res => {
@@ -83,7 +98,6 @@ const Event = module.exports = {
           return res.rows[0]
         })
     })
-
   },
 
   findEventById(eventId) {
