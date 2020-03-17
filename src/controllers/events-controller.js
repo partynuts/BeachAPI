@@ -1,4 +1,4 @@
-const  { findUserById } = require("../models/user-model");
+const  { findUserById, addBookingCountToUser } = require("../models/user-model");
 
 const { Router } = require("express");
 const controller = Router();
@@ -12,6 +12,8 @@ controller.post("/events", async (req, res) => {
   }
 
   const newEvent = await createEvent(req.body);
+  const increasedBookingCount = await addBookingCountToUser();
+  console.log("HAS BOOKING COUNT INCREASED FOR ", req.body.creator_id, increasedBookingCount);
   res.status(201).json(newEvent)
 
 });
@@ -60,8 +62,8 @@ controller.get("/events", async (req, res) => {
   if (pastEvent[0].participants !== null) {
     console.log("-------------EINS-------------", pastEvent[0])
     const pastEventUserData = await findUserById(pastEvent[0].participants);
-    pastEvent.participants = pastEventUserData.map(user => user.username);
-    eventData.pastEvent = pastEvent;
+    pastEvent[0].participants = pastEventUserData.map(user => user.username);
+    eventData.pastEvent = pastEvent[0];
   }
   if (nextEvents[1].participants !== null) {
     console.log("-------------DREI-------------")
