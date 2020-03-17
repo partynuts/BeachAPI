@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const controller = Router();
-const { findUserByUsername, findUserByEmail, createUser, findUserByEmailAndUsername } = require("../models/user-model")
+const { getAllUsers, findUserByUsername, findUserByEmail, createUser, findUserByEmailAndUsername } = require("../models/user-model")
 
 controller.post("/users", async (req, res) => {
 
@@ -31,5 +31,13 @@ controller.post("/users", async (req, res) => {
   res.status(201).json(newUser)
 
 });
+
+controller.get("/users", async (req, res) => {
+  console.log("GET ALL USERS")
+  const allUsers = await getAllUsers();
+  console.log("++++++ALL USERS++++", allUsers)
+  res.status(200).json(allUsers)
+});
+
 
 module.exports = controller;
