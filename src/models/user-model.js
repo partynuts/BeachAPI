@@ -6,7 +6,8 @@ module.exports = {
         (
             id       SERIAL PRIMARY KEY,
             username VARCHAR(250),
-            email    VARCHAR(250)
+            email    VARCHAR(250),
+            booking_count INTEGER
         );
     `);
   },
@@ -15,6 +16,27 @@ module.exports = {
     return global.client.query(`
         DROP TABLE IF EXISTS users;
     `)
+  },
+
+  addBookingCountToUser() {
+    console.log("INCREASING COUNT OF USER IN DB")
+    return global.client.query(`
+        UPDATE users
+        SET booking_count = booking_count + 1
+    `)
+      .then(res => {
+        return res.rows[0]
+      })
+  },
+
+  getAllUsers() {
+    return global.client.query(`
+                SELECT *
+                FROM users
+      `)
+      .then(res => {
+        return res.rows;
+      })
   },
 
   findUserByUsername(username) {
