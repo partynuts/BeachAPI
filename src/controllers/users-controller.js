@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const controller = Router();
-const { getAllUsers, findUserByUsername, findUserByEmail, createUser, findUserByEmailAndUsername } = require("../models/user-model")
+const { getAllUsers, findUserByUsername, findUserByEmail, findUserById, updateUser, createUser, findUserByEmailAndUsername } = require("../models/user-model")
 
 controller.post("/users", async (req, res) => {
 
@@ -12,7 +12,7 @@ controller.post("/users", async (req, res) => {
   }
 
   const foundUserByEmailAndUsername = await findUserByEmailAndUsername(req.body.username, req.body.email);
-
+  console.log("FOUND USER EMAIL", foundUserByEmailAndUsername)
   if (foundUserByEmailAndUsername) {
     return res.status(200).json(foundUserByEmailAndUsername);
   }
@@ -37,6 +37,21 @@ controller.get("/users", async (req, res) => {
   const allUsers = await getAllUsers();
   console.log("++++++ALL USERS++++", allUsers)
   res.status(200).json(allUsers)
+});
+
+controller.patch("/users/:userId", async (req, res) => {
+  console.log("set notification permission token")
+  const foundUser = await findUserById(req.params.userId);
+  if (!foundUser) {
+    return res.status(404).json({msg: "User not found!"})
+  }
+
+  if (req.body) {
+    const updatedUserData = await updateUser(req.body, req.params.userId);
+    console.log("+++++updatedUserData+++", updatedUserData);
+    return res.status(200).json(updatedUserData);
+  }
+  res.status(400);
 });
 
 

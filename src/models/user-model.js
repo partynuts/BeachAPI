@@ -1,4 +1,4 @@
-module.exports = {
+const user = module.exports = {
 
   ensureTable() {
     return global.client.query(`
@@ -7,7 +7,8 @@ module.exports = {
             id       SERIAL PRIMARY KEY,
             username VARCHAR(250),
             email    VARCHAR(250),
-            booking_count INTEGER
+            booking_count INTEGER,
+            notifications_token VARCHAR(250)
         );
     `);
   },
@@ -16,6 +17,21 @@ module.exports = {
     return global.client.query(`
         DROP TABLE IF EXISTS users;
     `)
+  },
+
+  updateUser(data, userId) {
+    const fragment = Object.entries(data) //date = Objekt mit notifications_token als key und value = x
+      .map(([key, value]) => `${key} = '${value}'`)
+      .join(', ');
+
+    return global.client.query(`
+        UPDATE users
+        SET ${fragment}
+        WHERE id = $1
+        RETURNING *
+    `, [userId]).then(res => {
+        return res.rows[0]
+      })
   },
 
   addBookingCountToUser() {
@@ -63,7 +79,7 @@ module.exports = {
       })
   },
 
-  findUserById(participantsIds) {
+  findUsersByIds(participantsIds) {
     return global.client.query(`
                 SELECT *
                 FROM users
@@ -74,7 +90,15 @@ module.exports = {
       })
   },
 
+  findUserById(userId) {
+    return user.findUsersByIds([userId])
+      .then(res => {
+        return res[0];
+      })
+  },
+
   findUserByEmailAndUsername(username, email) {
+    console.log("FINDING USER BY NAME AND MAIL", username, email)
     return global.client.query(`
                 SELECT *
                 FROM users
@@ -82,6 +106,7 @@ module.exports = {
       `,
       [username, email])
       .then(res => {
+        console.log("RESPONSE FROM FINDING USER", res)
         return res.rows[0];
       })
   },

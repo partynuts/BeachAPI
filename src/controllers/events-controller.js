@@ -1,4 +1,4 @@
-const  { findUserById, addBookingCountToUser } = require("../models/user-model");
+const  { findUsersByIds, addBookingCountToUser } = require("../models/user-model");
 
 const { Router } = require("express");
 const controller = Router();
@@ -32,7 +32,7 @@ controller.post("/events/:eventId/signup", async (req, res) => {
     return res.status(200).json({msg: "User is already signed up!"})
   }
   const newParticipant = await signUpUserForEvent(req.body.userId, req.params.eventId);
-  const userData = await findUserById(newParticipant.participants);
+  const userData = await findUsersByIds(newParticipant.participants);
   newParticipant.participants = userData.map(user => user.username);
 
   console.log("NEW PARTICIPANTS", newParticipant);
@@ -47,7 +47,7 @@ controller.post("/events/:eventId/cancel", async (req, res) => {
   }
 
   const updatedParticipants = await cancelUserFromEvent(req.body.userId, req.params.eventId);
-  const userData = await findUserById(updatedParticipants.participants);
+  const userData = await findUsersByIds(updatedParticipants.participants);
   updatedParticipants.participants = userData.map(user => user.username);
   res.status(200).json(updatedParticipants)
 });
@@ -61,19 +61,19 @@ controller.get("/events", async (req, res) => {
 
   if (pastEvent[0].participants !== null) {
     console.log("-------------EINS-------------", pastEvent[0])
-    const pastEventUserData = await findUserById(pastEvent[0].participants);
+    const pastEventUserData = await findUsersByIds(pastEvent[0].participants);
     pastEvent[0].participants = pastEventUserData.map(user => user.username);
     eventData.pastEvent = pastEvent[0];
   }
   if (nextEvents[1].participants !== null) {
     console.log("-------------DREI-------------")
-    const nextEventsUserData1 = await findUserById(nextEvents[1].participants);
+    const nextEventsUserData1 = await findUsersByIds(nextEvents[1].participants);
     nextEvents[1].participants = nextEventsUserData1.map(user => user.username);
     eventData.nextEvents[1] = nextEvents[1];
   }
   if (nextEvents[0].participants !== null) {
     console.log("-------------VIER-------------")
-    const nextEventsUserData0 = await findUserById(nextEvents[0].participants);
+    const nextEventsUserData0 = await findUsersByIds(nextEvents[0].participants);
     nextEvents[0].participants = nextEventsUserData0.map(user => user.username);
     eventData.nextEvents[0] = nextEvents[0];
   }
