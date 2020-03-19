@@ -4,10 +4,10 @@ const user = module.exports = {
     return global.client.query(`
         CREATE TABLE IF NOT EXISTS users
         (
-            id       SERIAL PRIMARY KEY,
-            username VARCHAR(250),
-            email    VARCHAR(250),
-            booking_count INTEGER,
+            id                  SERIAL PRIMARY KEY,
+            username            VARCHAR(250),
+            email               VARCHAR(250),
+            booking_count       INTEGER,
             notifications_token VARCHAR(250)
         );
     `);
@@ -30,8 +30,8 @@ const user = module.exports = {
         WHERE id = $1
         RETURNING *
     `, [userId]).then(res => {
-        return res.rows[0]
-      })
+      return res.rows[0]
+    })
   },
 
   addBookingCountToUser() {
@@ -47,9 +47,21 @@ const user = module.exports = {
 
   getAllUsers() {
     return global.client.query(`
-                SELECT *
-                FROM users
-      `)
+        SELECT *
+        FROM users
+    `)
+      .then(res => {
+        return res.rows;
+      })
+  },
+
+  getAllUsersWithToken() {
+    console.log("####GETTING USERS WITH TOKENS####")
+    return global.client.query(`
+        SELECT *
+        FROM users
+        WHERE notifications_token IS NOT NULL
+    `)
       .then(res => {
         return res.rows;
       })
@@ -71,12 +83,12 @@ const user = module.exports = {
     return global.client.query(`
                 SELECT *
                 FROM users
-                WHERE email = $1
+                WHERE lower(email) = $1
       `,
-      [email])
+      [email.toLowerCase()])
       .then(res => {
         return res.rows[0];
-      })
+      });
   },
 
   findUsersByIds(participantsIds) {
@@ -102,16 +114,17 @@ const user = module.exports = {
     return global.client.query(`
                 SELECT *
                 FROM users
-                WHERE username = $1 AND email = $2
+                WHERE lower(username) = $1
+                  AND lower(email) = $2
       `,
-      [username, email])
+      [username.toLowerCase(), email.toLowerCase()])
       .then(res => {
         console.log("RESPONSE FROM FINDING USER", res)
         return res.rows[0];
       })
   },
 
-  createUser({username, email}) {
+  createUser({ username, email }) {
     return global.client.query(`
         INSERT into users (username, email)
         VALUES ($1, $2)

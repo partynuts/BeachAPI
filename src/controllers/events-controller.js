@@ -1,4 +1,5 @@
-const  { findUsersByIds, addBookingCountToUser } = require("../models/user-model");
+const  { findUsersByIds, addBookingCountToUser, getAllUsersWithToken } = require("../models/user-model");
+const { sendPushNotification } = require("../models/notification-model")
 
 const { Router } = require("express");
 const controller = Router();
@@ -14,8 +15,14 @@ controller.post("/events", async (req, res) => {
   const newEvent = await createEvent(req.body);
   const increasedBookingCount = await addBookingCountToUser();
   console.log("HAS BOOKING COUNT INCREASED FOR ", req.body.creator_id, increasedBookingCount);
-  res.status(201).json(newEvent)
 
+  const allUsersWithToken = Array.from(await getAllUsersWithToken());
+  console.log("AAAAALL THE USERS WITH TOKEN", allUsersWithToken)
+  const notificationTokens = allUsersWithToken.filter(user => user.id !== req.body.creator_id).map(user => user.notifications_token)
+  console.log("@@@@@@@@@@@ NOTIFICTAIONS TOKENS @@@@@@", notificationTokens);
+
+  const sentNotifications = sendPushNotification("A new event has been created", notificationTokens, newEvent.id);
+  res.status(201).json(newEvent)
 });
 
 controller.post("/events/:eventId/signup", async (req, res) => {
