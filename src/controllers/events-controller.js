@@ -74,19 +74,19 @@ controller.get("/events", async (req, res) => {
   const nextEvents = await findNextTwoEvents();
   let eventData = { pastEvent, nextEvents };
 
-  if (pastEvent[0].participants !== null) {
+  if (pastEvent.length && pastEvent[0].participants !== null) {
     console.log("-------------EINS-------------", pastEvent[0])
     const pastEventUserData = await findUsersByIds(pastEvent[0].participants);
     pastEvent[0].participants = pastEventUserData.map(user => user.username);
     eventData.pastEvent = pastEvent[0];
   }
-  if (nextEvents[1].participants !== null) {
+  if (nextEvents.length && nextEvents[1].participants !== null) {
     console.log("-------------DREI-------------")
     const nextEventsUserData1 = await findUsersByIds(nextEvents[1].participants);
     nextEvents[1].participants = nextEventsUserData1.map(user => user.username);
     eventData.nextEvents[1] = nextEvents[1];
   }
-  if (nextEvents[0].participants !== null) {
+  if (nextEvents.length && nextEvents[0].participants !== null) {
     console.log("-------------VIER-------------")
     const nextEventsUserData0 = await findUsersByIds(nextEvents[0].participants);
     nextEvents[0].participants = nextEventsUserData0.map(user => user.username);

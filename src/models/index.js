@@ -1,9 +1,10 @@
 const User = require('./user-model');
-const Events = require('./event-model');
-const models = [User, Events];
+const Event = require('./event-model');
+const models = [User, Event];
 
 module.exports = {
   User,
+  Event,
   sync: async ({ force } = {}) => {
     if (force) {
       await models.map(async model => await model.dropTable());
