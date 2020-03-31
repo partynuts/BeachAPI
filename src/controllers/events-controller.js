@@ -1,9 +1,9 @@
-const  { findUsersByIds, addBookingCountToUser, getAllUsersWithToken } = require("../models/user-model");
+const { findUsersByIds, addBookingCountToUser, getAllUsersWithToken } = require("../models/user-model");
 const { sendPushNotification } = require("../models/notification-model")
 
 const { Router } = require("express");
 const controller = Router();
-const { createEvent, findMostRecentPastEvent, findNextTwoEvents, signUpUserForEvent, cancelUserFromEvent, findEventById } = require("../models/event-model")
+const { createEvent, checkIfSignUpStillPossible, findMostRecentPastEvent, findNextTwoEvents, signUpUserForEvent, cancelUserFromEvent, findEventById, SIGNUP_ALLOWED, SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP, SIGNUP_FORBIDDEN_MAX_REACHED} = require("../models/event-model")
 
 controller.post("/events", async (req, res) => {
   console.log("-------CREATING EVENT IN CONTROLLER-------", req.body)
@@ -35,15 +35,23 @@ controller.post("/events/:eventId/signup", async (req, res) => {
   if (!foundEvent) {
     return res.sendStatus(404)
   }
-  if (foundEvent.participants && foundEvent.participants.includes(req.body.userId)) {
-    return res.status(200).json({msg: "User is already signed up!"})
-  }
-  const newParticipant = await signUpUserForEvent(req.body.userId, req.params.eventId);
-  const userData = await findUsersByIds(newParticipant.participants);
-  newParticipant.participants = userData.map(user => user.username);
 
-  console.log("NEW PARTICIPANTS", newParticipant);
-  res.status(201).json(newParticipant)
+  const signUpChecked = checkIfSignUpStillPossible(req.body.userId, foundEvent);
+
+  if (signUpChecked === SIGNUP_ALLOWED) {
+    const newParticipant = await signUpUserForEvent(req.body.userId, foundEvent);
+    const userData = await findUsersByIds(newParticipant.participants);
+    newParticipant.participants = userData.map(user => user.username);
+
+    console.log("NEW PARTICIPANTS", newParticipant);
+    return res.status(201).json(newParticipant)
+  }
+  if (signUpChecked === SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP) {
+    return res.status(403).json({ msg: "You are already signed up for this event!" });
+  }
+  if (signUpChecked === SIGNUP_FORBIDDEN_MAX_REACHED) {
+    return res.status(403).json({ msg: "Maximum number of participants is already reached. You cannot sign up for this event at the moment." });
+  }
 });
 
 controller.post("/events/:eventId/cancel", async (req, res) => {
@@ -64,7 +72,7 @@ controller.get("/events", async (req, res) => {
 
   const pastEvent = await findMostRecentPastEvent();
   const nextEvents = await findNextTwoEvents();
-  let eventData = {pastEvent, nextEvents};
+  let eventData = { pastEvent, nextEvents };
 
   if (pastEvent[0].participants !== null) {
     console.log("-------------EINS-------------", pastEvent[0])
@@ -85,7 +93,7 @@ controller.get("/events", async (req, res) => {
     eventData.nextEvents[0] = nextEvents[0];
   }
 
-  console.log("EVENT DATA IN HOME",eventData);
+  console.log("EVENT DATA IN HOME", eventData);
   return res.status(200).json(eventData)
 
 });

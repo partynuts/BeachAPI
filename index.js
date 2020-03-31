@@ -2,7 +2,7 @@ const App = require('./src/app');
 
 (async () => {
   const app = await App({connectionString: process.env.DATABASE_URL});
-  const port = process.env.PORT || 4040;
+  const port = process.env.PORT || 9090;
   const models = require('./src/models');
 
   await models.sync({force: process.env.UPDATEDB});
