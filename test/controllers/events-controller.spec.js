@@ -89,7 +89,7 @@ describe("events controller", () => {
         });
     });
 
-    it("returns events if any are available", async () => {
+    it("resolves the participants names if any are available", async () => {
       const user = await User.createUser({
         username: "somebody",
         email: "some@body.com"
@@ -122,5 +122,40 @@ describe("events controller", () => {
           nextEvents: []
         });
     });
+
+    it('can handle removed participants', async()=>{
+      const user = await User.createUser({
+        username: "somebody",
+        email: "some@body.com"
+      });
+      const otherUser = await User.createUser({
+        username: "somebody else",
+        email: "somebody@else.com"
+      });
+
+      const pastEvent = await Event.createEvent({
+        event_date: new Date("2020/03/15"),
+        number_of_fields: 2,
+        location: "irgendwo",
+        creator_id: user.id
+      });
+      await Event.signUpUserForEvent(otherUser.id, pastEvent);
+      await Event.cancelUserFromEvent(otherUser.id, pastEvent.id)
+
+      await request(app)
+        .get("/events")
+        .expect(200)
+        .expect({
+          pastEvent: {
+            id: 1,
+            event_date: "2020-03-14T23:00:00.000Z",
+            number_of_fields: 2,
+            location: "irgendwo",
+            creator_id: user.id,
+            participants: []
+          },
+          nextEvents: []
+        });
+    })
   });
 });
