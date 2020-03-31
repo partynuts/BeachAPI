@@ -92,14 +92,18 @@ const user = module.exports = {
   },
 
   findUsersByIds(participantsIds) {
-    return global.client.query(`
+    if (participantsIds.length > 0) {
+      return global.client.query(`
                 SELECT *
                 FROM users
                 WHERE id IN (${participantsIds.join()})
       `)
-      .then(res => {
-        return res.rows;
-      })
+        .then(res => {
+          return res.rows;
+        })
+    } else {
+      return [];
+    }
   },
 
   findUserById(userId) {

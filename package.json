@@ -9,7 +9,7 @@
   "private": true,
   "scripts": {
     "start": "node index.js",
-    "test": "mocha --exit test/**/*.spec.js"
+    "test": "mocha --exit -t 10000 test/**/*.spec.js"
   },
   "dependencies": {
     "body-parser": "^1.19.0",

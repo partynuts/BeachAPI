@@ -34,3 +34,6 @@ module.exports = async ({ database = "beachapp", connectionString } = {}) => {
 
   return app;
 };
+process.on('unhandledRejection', (reason, p) => {
+  console.error('Unhandled Rejection at: Promise', p, 'reason:', reason);
+});
