@@ -24,6 +24,34 @@ describe("events controller", () => {
           nextEvents: []
         }));
 
+      it("returns the only existing upcoming event", async () => {
+        const nextEvents = [
+          await Event.createEvent({
+            event_date: new Date("2020/04/15"),
+            number_of_fields: 2,
+            location: "irgendwo",
+            creator_id: 1,
+          }),
+        ];
+  
+        await request(app)
+          .get("/events")
+          .expect(200)
+          .expect({
+            pastEvent: [],
+            nextEvents: [
+              {
+                id: 1,
+                event_date: "2020-04-14T22:00:00.000Z",
+                number_of_fields: 2,
+                location: "irgendwo",
+                creator_id: 1,
+                participants: null,
+              },
+            ],
+          });
+      });
+
     it("returns events if any are available", async () => {
       const pastEvent = await Event.createEvent({
         event_date: new Date("2020/03/15"),
