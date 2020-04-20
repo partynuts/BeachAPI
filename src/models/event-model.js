@@ -114,11 +114,11 @@ SIGNUP_ALLOWED, SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP, SIGNUP_FORBIDDEN_MAX_REACHED
           },
           {
             numberOfFields: 2,
-            maxNumberOfParticipants: 10
+            maxNumberOfParticipants: 2
           },
           {
             numberOfFields: 3,
-            maxNumberOfParticipants: 1
+            maxNumberOfParticipants: 2
           },
           {
             numberOfFields: 4,

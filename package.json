@@ -17,10 +17,14 @@
     "cors": "^2.8.5",
     "expo-server-sdk": "^3.4.0",
     "express": "^4.17.1",
+    "ics": "^2.19.0",
     "mocha": "^7.1.0",
     "morgan": "^1.9.1",
     "pg": "^7.18.2",
     "require-dir-all": "^0.4.15",
     "supertest": "^4.0.2"
+  },
+  "devDependencies": {
+    "umzug": "^2.3.0"
   }
 }

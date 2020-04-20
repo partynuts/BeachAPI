@@ -12,7 +12,7 @@ controller.post("/users", async (req, res) => {
   }
 
   const foundUserByEmailAndUsername = await findUserByEmailAndUsername(req.body.username, req.body.email);
-  console.log("FOUND USER EMAIL", foundUserByEmailAndUsername)
+  // console.log("FOUND USER EMAIL", foundUserByEmailAndUsername)
   if (foundUserByEmailAndUsername) {
     return res.status(200).json(foundUserByEmailAndUsername);
   }
@@ -33,14 +33,14 @@ controller.post("/users", async (req, res) => {
 });
 
 controller.get("/users", async (req, res) => {
-  console.log("GET ALL USERS")
+  // console.log("GET ALL USERS")
   const allUsers = await getAllUsers();
-  console.log("++++++ALL USERS++++", allUsers)
+  // console.log("++++++ALL USERS++++", allUsers)
   res.status(200).json(allUsers)
 });
 
 controller.patch("/users/:userId", async (req, res) => {
-  console.log("set notification permission token")
+  // console.log("set notification permission token")
   const foundUser = await findUserById(req.params.userId);
   if (!foundUser) {
     return res.status(404).json({msg: "User not found!"})
@@ -48,7 +48,7 @@ controller.patch("/users/:userId", async (req, res) => {
 
   if (req.body) {
     const updatedUserData = await updateUser(req.body, req.params.userId);
-    console.log("+++++updatedUserData+++", updatedUserData);
+    // console.log("+++++updatedUserData+++", updatedUserData);
     return res.status(200).json(updatedUserData);
   }
   res.status(400);
