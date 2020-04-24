@@ -1,17 +1,23 @@
 const { Router } = require("express");
 const controller = Router();
-const { createEvent,
+const ics = require('ics');
+const { writeFileSync } = require('fs')
+const {
+  createEvent,
   checkIfSignUpStillPossible,
   findMostRecentPastEvent,
   findNextTwoEvents,
   signUpUserForEvent,
   cancelUserFromEvent,
   findEventById,
-  SIGNUP_ALLOWED, SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP, SIGNUP_FORBIDDEN_MAX_REACHED} = require("../models/event-model")
-const { findUsersByIds,
+  SIGNUP_ALLOWED, SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP, SIGNUP_FORBIDDEN_MAX_REACHED
+} = require("../models/event-model")
+const {
+  findUsersByIds,
   addBookingCountToUser,
   getAllUsersWithToken,
-  findUserById} = require("../models/user-model");
+  findUserById
+} = require("../models/user-model");
 const { findCourtProviderByName } = require("../models/court-model");
 const { sendPushNotification } = require("../models/notification-model");
 
@@ -132,6 +138,39 @@ controller.get("/events", async (req, res) => {
 
   console.log("EVENT DATA IN HOME", eventData);
   return res.status(200).json(eventData)
+
+});
+
+controller.get("/events/:eventid/calendar", async (req, res) => {
+  console.log("CREATING iCAL Event");
+  const event = {
+    start: [2020, 5, 1, 6, 30],
+    end: [2020, 5, 1, 8, 30],
+    // duration: { hours: 6, minutes: 30 },
+    title: 'Bitch-Time',
+    description: 'weekly bitchy with the bitches',
+    location: 'East61',
+    url: 'http://www.beach61.com/',
+    // geo: { lat: 40.0095, lon: 105.2669 },
+    attendees: [
+      { name: 'Parinaz', email: 'parinazroghany@yahoo.de' }
+    ]
+  };
+
+  const iCal = ics.createEvent(event, (error, value) => {
+    if (error) {
+      console.log(error)
+      return
+    }
+    console.log("iCal Event value", value)
+    // return res.status(200).json(value)
+
+    res.set('Content-Type', 'text/calendar;charset=utf-8');
+    res.set('Content-Disposition', 'attachment; filename="bitchen.pro.calendar.my.ics"');
+    console.log("iCal String", value)
+    return res.send(value);
+  });
+
 
 });
 
