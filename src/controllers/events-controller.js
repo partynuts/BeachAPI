@@ -1,7 +1,6 @@
 const { Router } = require("express");
 const controller = Router();
 const ics = require('ics');
-const { writeFileSync } = require('fs')
 const {
   createEvent,
   checkIfSignUpStillPossible,
@@ -18,7 +17,7 @@ const {
   getAllUsersWithToken,
   findUserById
 } = require("../models/user-model");
-const { findCourtProviderByName } = require("../models/court-model");
+const { findCourtPriceByProviderName, findCourtProviderByName } = require("../models/court-model");
 const { sendPushNotification } = require("../models/notification-model");
 
 controller.post("/events", async (req, res) => {
@@ -103,13 +102,13 @@ controller.get("/events", async (req, res) => {
   const nextEvents = await findNextTwoEvents();
   let eventData = { pastEvent, nextEvents };
 
-  const courtPricePast = await findCourtProviderByName(pastEvent[0].location)
+  const courtPricePast = await findCourtPriceByProviderName(pastEvent[0].location)
   console.log("COURT PRICE PAST", courtPricePast.price)
   pastEvent[0].courtPrice = courtPricePast.price
-  const courtPriceNext0 = await findCourtProviderByName(nextEvents[0].location)
+  const courtPriceNext0 = await findCourtPriceByProviderName(nextEvents[0].location)
   console.log("COURT PRICE 0", courtPriceNext0)
   nextEvents[0].courtPrice = courtPriceNext0.price;
-  const courtPriceNext1 = await findCourtProviderByName(nextEvents[1].location)
+  const courtPriceNext1 = await findCourtPriceByProviderName(nextEvents[1].location)
   console.log("COURT PRICE 1", courtPriceNext1)
   nextEvents[1].courtPrice = courtPriceNext1.price
 
@@ -141,21 +140,35 @@ controller.get("/events", async (req, res) => {
 
 });
 
-controller.get("/events/:eventid/calendar", async (req, res) => {
-  console.log("CREATING iCAL Event");
+controller.get("/events/:eventId/calendar", async (req, res) => {
+  console.log("CREATING iCAL Event", req.params.eventId);
+  const foundEvent = await findEventById(req.params.eventId);
+  const courtLocation = await findCourtProviderByName(foundEvent.location);
+
+  // createCalendarEvent(foundEvent)
+
+console.log("******** LOCATION COURT", courtLocation);
+  console.log("EVENT DATA", foundEvent)
+  console.log("TYPE", typeof foundEvent.event_date)
+  const startDay = foundEvent.event_date.getDate()
+  const startMonth = foundEvent.event_date.getMonth() + 1;
+  const startYear = foundEvent.event_date.getFullYear()
+  const startHour = foundEvent.event_date.getHours()
+  const startMinute = foundEvent.event_date.getMinutes()
+
   const event = {
-    start: [2020, 5, 1, 6, 30],
-    end: [2020, 5, 1, 8, 30],
-    // duration: { hours: 6, minutes: 30 },
-    title: 'Bitch-Time',
-    description: 'weekly bitchy with the bitches',
-    location: 'East61',
+    start: [startYear, startMonth, startDay, startHour, startMinute],
+    // end: [2020, 5, 1, 8, 30],
+    duration: { hours: 2, minutes: 0 },
+    title: 'Beach-Time',
+    description: 'weekly Beachvolleyball fun',
+    location: `${foundEvent.location}, ${courtLocation.address}`,
     url: 'http://www.beach61.com/',
     // geo: { lat: 40.0095, lon: 105.2669 },
-    attendees: [
-      { name: 'Parinaz', email: 'parinazroghany@yahoo.de' }
-    ]
+    alarms: [{ action: 'display', trigger: { hours: 2, minutes: 30, before: true }},
+      { action: 'display', trigger: { hours: 24, minutes: 0, before: true }}]
   };
+  console.log("EVENT START", event.start)
 
   const iCal = ics.createEvent(event, (error, value) => {
     if (error) {
@@ -166,47 +179,11 @@ controller.get("/events/:eventid/calendar", async (req, res) => {
     // return res.status(200).json(value)
 
     res.set('Content-Type', 'text/calendar;charset=utf-8');
-    res.set('Content-Disposition', 'attachment; filename="bitchen.pro.calendar.my.ics"');
+    res.set('Content-Disposition', 'attachment; filename="beachen.pro.calendar.my.ics"');
     console.log("iCal String", value)
     return res.send(value);
   });
 
-
 });
-
-// controller.get("/events/:eventid/calendar", async (req, res) => {
-//   BEGIN:VCALENDAR
-//   VERSION:2.0
-//   PRODID:http://www.example.com/calendarapplication/
-//     METHOD:PUBLISH
-//   BEGIN:VTIMEZONE
-//   TZID:Europe/Berlin
-//   BEGIN:STANDARD
-//   DTSTART:16011028T030000
-//   RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10
-//   TZOFFSETFROM:+0200
-//   TZOFFSETTO:+0100
-//   END:STANDARD
-//   BEGIN:DAYLIGHT
-//   DTSTART:16010325T020000
-//   RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3
-//   TZOFFSETFROM:+0100
-//   TZOFFSETTO:+0200
-//   END:DAYLIGHT
-//   END:VTIMEZONE
-//   BEGIN:VEVENT
-//   UID:461092315540@example.com
-//   ORGANIZER;CN="Alice Balder, Example Inc.":MAILTO:alice@example.com
-//   LOCATION:Irgendwo
-//   GEO:48.85299;2.36885
-//   SUMMARY:Eine Kurzinfo
-//   DESCRIPTION:Beschreibung des Termines
-//   CLASS:PUBLIC
-//   DTSTART;TZID=Europe/Berlin:20200910T220000Z
-//   DTEND;TZID=Europe/Berlin:20200919T215900Z
-//   DTSTAMP;TZID=Europe/Berlin:20200812T125900Z
-//   END:VEVENT
-//   END:VCALENDAR
-// })
 
 module.exports = controller;

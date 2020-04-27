@@ -152,4 +152,8 @@ SIGNUP_ALLOWED, SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP, SIGNUP_FORBIDDEN_MAX_REACHED
         return res.rows[0];
       })
   }
+
+  // createCalendarEvent(event) {
+  //
+  // }
 };
