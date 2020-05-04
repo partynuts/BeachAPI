@@ -9,6 +9,7 @@ const {
   signUpUserForEvent,
   cancelUserFromEvent,
   findEventById,
+  createCalendarEvent,
   SIGNUP_ALLOWED, SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP, SIGNUP_FORBIDDEN_MAX_REACHED
 } = require("../models/event-model")
 const {
@@ -143,46 +144,15 @@ controller.get("/events", async (req, res) => {
 controller.get("/events/:eventId/calendar", async (req, res) => {
   console.log("CREATING iCAL Event", req.params.eventId);
   const foundEvent = await findEventById(req.params.eventId);
-  const courtLocation = await findCourtProviderByName(foundEvent.location);
-
-  // createCalendarEvent(foundEvent)
-
-console.log("******** LOCATION COURT", courtLocation);
   console.log("EVENT DATA", foundEvent)
-  console.log("TYPE", typeof foundEvent.event_date)
-  const startDay = foundEvent.event_date.getDate()
-  const startMonth = foundEvent.event_date.getMonth() + 1;
-  const startYear = foundEvent.event_date.getFullYear()
-  const startHour = foundEvent.event_date.getHours()
-  const startMinute = foundEvent.event_date.getMinutes()
 
-  const event = {
-    start: [startYear, startMonth, startDay, startHour, startMinute],
-    // end: [2020, 5, 1, 8, 30],
-    duration: { hours: 2, minutes: 0 },
-    title: 'Beach-Time',
-    description: 'weekly Beachvolleyball fun',
-    location: `${foundEvent.location}, ${courtLocation.address}`,
-    url: 'http://www.beach61.com/',
-    // geo: { lat: 40.0095, lon: 105.2669 },
-    alarms: [{ action: 'display', trigger: { hours: 2, minutes: 30, before: true }},
-      { action: 'display', trigger: { hours: 24, minutes: 0, before: true }}]
-  };
-  console.log("EVENT START", event.start)
-
-  const iCal = ics.createEvent(event, (error, value) => {
-    if (error) {
-      console.log(error)
-      return
-    }
-    console.log("iCal Event value", value)
-    // return res.status(200).json(value)
+  const value = await createCalendarEvent(foundEvent)
+  console.log("VALUE OF CREATE CAL EVE", value)
 
     res.set('Content-Type', 'text/calendar;charset=utf-8');
     res.set('Content-Disposition', 'attachment; filename="beachen.pro.calendar.my.ics"');
-    console.log("iCal String", value)
+    console.log("iCal String", value);
     return res.send(value);
-  });
 
 });
 
