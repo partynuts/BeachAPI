@@ -3,6 +3,7 @@ const SIGNUP_ALLOWED = 'signupAllowed';
 const SIGNUP_FORBIDDEN_MAX_REACHED = 'signupForbiddenMaxReached';
 const SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP = 'signupForbiddenAlreadySignedUp';
 const { findCourtProviderByName } = require("../models/court-model");
+const { getNumberOfGuestsForEvent } = require("../models/enrollment-model");
 
 const Event = module.exports = {
   SIGNUP_ALLOWED, SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP, SIGNUP_FORBIDDEN_MAX_REACHED,
@@ -104,7 +105,7 @@ const Event = module.exports = {
       })
   },
 
-  checkIfSignUpStillPossible(userId, event) {
+  async checkIfSignUpStillPossible(userId, event) {
     console.log("Checking sign UP FOR EVENT IN DB", userId, event)
 
     console.log("RIGHT EVENT?========================", event)
@@ -112,23 +113,39 @@ const Event = module.exports = {
     const participationCondition = [
       {
         numberOfFields: 1,
-        maxNumberOfParticipants: 2
+        maxNumberOfParticipants: 3
       },
       {
         numberOfFields: 2,
-        maxNumberOfParticipants: 2
+        maxNumberOfParticipants: 3
       },
       {
         numberOfFields: 3,
-        maxNumberOfParticipants: 2
+        maxNumberOfParticipants: 3
       },
       {
         numberOfFields: 4,
-        maxNumberOfParticipants: 2
+        maxNumberOfParticipants: 3
       }
     ];
 
-    const participantsAllowed = !!(participationCondition.filter(config => event.number_of_fields === config.numberOfFields && (event.participants || []).length < config.maxNumberOfParticipants)).length
+    const guests = await getNumberOfGuestsForEvent(event.id);
+    console.log("GUESTS IN EVENTS MODEL", guests);
+
+    // const participantsAllowed = !!(participationCondition.filter(config => event.number_of_fields === config.numberOfFields && (event.participants || []).length < config.maxNumberOfParticipants)).length
+    const participantsAllowed = !!(participationCondition.filter(config => {
+      const matchingNumberOfFields = event.number_of_fields === config.numberOfFields;
+      const numberTotalParticipants = (event.participants || []).length + guests;
+      return matchingNumberOfFields && numberTotalParticipants < config.maxNumberOfParticipants;
+    })).length;
+
+    const numberOfAllowedParticipants = participationCondition.filter(config => {
+      const matchingNumberOfFields = event.number_of_fields === config.numberOfFields;
+      const numberTotalParticipants = (event.participants || []).length + guests;
+      return matchingNumberOfFields && numberTotalParticipants < config.maxNumberOfParticipants;
+    });
+
+    console.log("+++++++ RESULT OF FILTER ++++++++", numberOfAllowedParticipants);
 
     console.log("********* Participants still allowed? ********", participantsAllowed)
 
@@ -142,6 +159,51 @@ const Event = module.exports = {
       return SIGNUP_ALLOWED;
     }
 
+  },
+
+  async checkIfGuestSignupPossible(event) {
+    console.log("Checking sign UP FOR GUEST IN EVENT IN DB", event)
+
+    const participationConditions = [
+      {
+        numberOfFields: 1,
+        maxNumberOfParticipants: 3
+      },
+      {
+        numberOfFields: 2,
+        maxNumberOfParticipants: 3
+      },
+      {
+        numberOfFields: 3,
+        maxNumberOfParticipants: 3
+      },
+      {
+        numberOfFields: 4,
+        maxNumberOfParticipants: 3
+      }
+    ];
+
+    const guests = await getNumberOfGuestsForEvent(event.id);
+    const numberTotalParticipants = (event.participants || []).length + guests;
+    console.log("GUESTS IN EVENTS MODEL", guests);
+
+    const participationCondition = (participationConditions.filter(config => {
+      const matchingNumberOfFields = event.number_of_fields === config.numberOfFields;
+      return matchingNumberOfFields && numberTotalParticipants < config.maxNumberOfParticipants;
+    }))[0];
+    const numberOfAvailableSeats = participationCondition.maxNumberOfParticipants - numberTotalParticipants;
+
+    const participantsAllowed = participationCondition !== undefined;
+
+    console.log("********* Participants still allowed? ********", participantsAllowed)
+
+    if (!event.participants) {
+      return {result: SIGNUP_ALLOWED, numberOfAvailableSeats};
+    } else if (!participantsAllowed) {
+      return {result: SIGNUP_FORBIDDEN_MAX_REACHED, numberOfAvailableSeats}
+    } else {
+      return {result: SIGNUP_ALLOWED, numberOfAvailableSeats};
+    }
   },
 
   findEventById(eventId) {

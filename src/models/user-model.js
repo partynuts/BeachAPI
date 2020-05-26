@@ -148,4 +148,5 @@ const user = module.exports = {
         return res.rows;
       })
   }
-}
+
+};

@@ -10,6 +10,7 @@ const {
   cancelUserFromEvent,
   findEventById,
   createCalendarEvent,
+  checkIfGuestSignupPossible,
   SIGNUP_ALLOWED, SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP, SIGNUP_FORBIDDEN_MAX_REACHED
 } = require("../models/event-model")
 const {
@@ -19,6 +20,7 @@ const {
   findUserById
 } = require("../models/user-model");
 const { findCourtPriceByProviderName, findCourtProviderByName } = require("../models/court-model");
+const { addGuestsToEvent, findUsersByEvent } = require("../models/enrollment-model");
 const { sendPushNotification } = require("../models/notification-model");
 
 controller.post("/events", async (req, res) => {
@@ -53,8 +55,8 @@ controller.post("/events/:eventId/signup", async (req, res) => {
     return res.sendStatus(404)
   }
 
-  const signUpChecked = checkIfSignUpStillPossible(req.body.userId, foundEvent);
-
+  const signUpChecked = await checkIfSignUpStillPossible(req.body.userId, foundEvent);
+  console.log("SIGNUP CHEKCED", signUpChecked)
   if (signUpChecked === SIGNUP_ALLOWED) {
     const newParticipant = await signUpUserForEvent(req.body.userId, foundEvent);
     const userData = await findUsersByIds(newParticipant.participants);
@@ -70,6 +72,35 @@ controller.post("/events/:eventId/signup", async (req, res) => {
     return res.status(403).json({ msg: "Maximum number of participants is already reached. You cannot sign up for this event at the moment." });
   }
 });
+
+controller.post("/events/:eventId/signupGuest", async (req, res) => {
+  console.log("SIGNING UP GUESTS IN CONTROLLER", req.body);
+
+  if (!req.body.userId || !req.params.eventId) {
+    return res.sendStatus(400)
+  }
+  const foundEvent = await findEventById(req.params.eventId);
+  if (!foundEvent) {
+    return res.sendStatus(404)
+  }
+
+  const signUpChecked = await checkIfGuestSignupPossible(foundEvent);
+  console.log("SIGNUP CHEckED FOr GUEST", signUpChecked)
+  if (signUpChecked.result === SIGNUP_ALLOWED) {
+    const guestParticipants = await addGuestsToEvent(req.body.userId, Math.min(req.body.numberOfGuests, signUpChecked.numberOfAvailableSeats), foundEvent.id);
+    const userData = await findUsersByEvent(foundEvent);
+    foundEvent.participants = userData.map(user => `${user.guests || 0} guests from ${user.username}`);
+
+    // console.log("NEW PARTICIPANTS", newParticipant);
+    return res.status(201).json(foundEvent)
+  }
+  if (signUpChecked === SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP) {
+    return res.status(403).json({ msg: "You are already signed up for this event!" });
+  }
+  if (signUpChecked === SIGNUP_FORBIDDEN_MAX_REACHED) {
+    return res.status(403).json({ msg: "Maximum number of participants is already reached. You cannot sign up for this event at the moment." });
+  }
+})
 
 controller.post("/events/:eventId/cancel", async (req, res) => {
   // console.log("-------CANCELLING FOR EVENT IN CONTROLLER-------", req.body)
@@ -149,10 +180,10 @@ controller.get("/events/:eventId/calendar", async (req, res) => {
   const value = await createCalendarEvent(foundEvent)
   console.log("VALUE OF CREATE CAL EVE", value)
 
-    res.set('Content-Type', 'text/calendar;charset=utf-8');
-    res.set('Content-Disposition', 'attachment; filename="beachen.pro.calendar.my.ics"');
-    console.log("iCal String", value);
-    return res.send(value);
+  res.set('Content-Type', 'text/calendar;charset=utf-8');
+  res.set('Content-Disposition', 'attachment; filename="beachen.pro.calendar.my.ics"');
+  console.log("iCal String", value);
+  return res.send(value);
 
 });
 
