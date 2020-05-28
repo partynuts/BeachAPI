@@ -96,6 +96,9 @@ controller.post("/events/:eventId/cancel", async (req, res) => {
   res.status(200).json(updatedParticipants)
 });
 
+/*
+  TODO: Write many many tests and refactor it :)
+*/ 
 controller.get("/events", async (req, res) => {
   console.log("-------GETTING EVENT IN CONTROLLER-------")
 
@@ -103,15 +106,32 @@ controller.get("/events", async (req, res) => {
   const nextEvents = await findNextTwoEvents();
   let eventData = { pastEvent, nextEvents };
 
-  const courtPricePast = await findCourtPriceByProviderName(pastEvent[0].location)
-  console.log("COURT PRICE PAST", courtPricePast.price)
-  pastEvent[0].courtPrice = courtPricePast.price
-  const courtPriceNext0 = await findCourtPriceByProviderName(nextEvents[0].location)
-  console.log("COURT PRICE 0", courtPriceNext0)
-  nextEvents[0].courtPrice = courtPriceNext0.price;
-  const courtPriceNext1 = await findCourtPriceByProviderName(nextEvents[1].location)
-  console.log("COURT PRICE 1", courtPriceNext1)
-  nextEvents[1].courtPrice = courtPriceNext1.price
+  if (pastEvent[0]) {
+    const courtPricePast = await findCourtPriceByProviderName(pastEvent[0].location)
+
+    if (courtPricePast) {
+      console.log("COURT PRICE PAST", courtPricePast.price)
+      pastEvent[0].courtPrice = courtPricePast.price
+    }
+  }
+  
+  if (nextEvents[0]) {
+    const courtPriceNext0 = await findCourtPriceByProviderName(nextEvents[0].location)
+
+    if (courtPriceNext0) {
+      console.log("COURT PRICE 0", courtPriceNext0)
+      nextEvents[0].courtPrice = courtPriceNext0.price;
+    }
+  }
+  
+  if (nextEvents[1]) {
+    const courtPriceNext1 = await findCourtPriceByProviderName(nextEvents[1].location)
+
+    if (courtPriceNext1) {
+      console.log("COURT PRICE 1", courtPriceNext1)
+      nextEvents[1].courtPrice = courtPriceNext1.price
+    }
+  }
 
   if (pastEvent.length && pastEvent[0].participants !== null) {
     console.log("-------------EINS-------------", pastEvent[0])

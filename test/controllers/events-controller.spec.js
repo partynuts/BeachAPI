@@ -27,7 +27,7 @@ describe("events controller", () => {
       it("returns the only existing upcoming event", async () => {
         const nextEvents = [
           await Event.createEvent({
-            event_date: new Date("2020/04/15"),
+            event_date: new Date("2120/04/15"),
             number_of_fields: 2,
             location: "irgendwo",
             creator_id: 1,
@@ -42,7 +42,7 @@ describe("events controller", () => {
             nextEvents: [
               {
                 id: 1,
-                event_date: "2020-04-14T22:00:00.000Z",
+                event_date: "2120-04-14T22:00:00.000Z",
                 number_of_fields: 2,
                 location: "irgendwo",
                 creator_id: 1,
@@ -62,7 +62,7 @@ describe("events controller", () => {
 
       const nextEvents = [
         await Event.createEvent({
-          event_date: new Date("2020/04/15"),
+          event_date: new Date("2120/04/15"),
           number_of_fields: 2,
           location: "irgendwo",
           creator_id: 1
@@ -99,7 +99,7 @@ describe("events controller", () => {
           nextEvents: [
             {
               id: 2,
-              event_date: "2020-04-14T22:00:00.000Z",
+              event_date: "2120-04-14T22:00:00.000Z",
               number_of_fields: 2,
               location: "irgendwo",
               creator_id: 1,
