@@ -1,24 +1,4 @@
 const user = module.exports = {
-
-  ensureTable() {
-    return global.client.query(`
-        CREATE TABLE IF NOT EXISTS users
-        (
-            id                  SERIAL PRIMARY KEY,
-            username            VARCHAR(250),
-            email               VARCHAR(250),
-            booking_count       INTEGER,
-            notifications_token VARCHAR(250)
-        );
-    `);
-  },
-
-  dropTable() {
-    return global.client.query(`
-        DROP TABLE IF EXISTS users;
-    `)
-  },
-
   updateUser(data, userId) {
     const fragment = Object.entries(data) //date = Objekt mit notifications_token als key und value = x
       .map(([key, value]) => `${key} = '${value}'`)

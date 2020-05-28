@@ -7,27 +7,6 @@ const { findCourtProviderByName } = require("../models/court-model");
 const Event = module.exports = {
   SIGNUP_ALLOWED, SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP, SIGNUP_FORBIDDEN_MAX_REACHED,
 
-  ensureTable() {
-    console.log("EVENTS TABLE")
-    return global.client.query(`
-        CREATE TABLE IF NOT EXISTS events
-        (
-            id               SERIAL PRIMARY KEY,
-            event_date       timestamptz,
-            number_of_fields INTEGER,
-            location         VARCHAR(250),
-            creator_id       INTEGER,
-            participants     INTEGER ARRAY
-        );
-    `);
-  },
-
-  dropTable() {
-    return global.client.query(`
-        DROP TABLE IF EXISTS events;
-    `)
-  },
-
   createEvent({ event_date, number_of_fields, location, creator_id }) {
     console.log("CREATING EVENT IN DB")
     return global.client.query(`
