@@ -3,14 +3,26 @@ name: Beach API CI
 on: [push]
 
 jobs:
-  build:
-    # Job name is Greeting
-    name: Testrun
-    # This job runs on Linux
+  container-jobs:
     runs-on: ubuntu-latest
+    container: node:10.18-jessie
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health_interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: install dependencies
         run: yarn
       - name: Execute tests
         run: yarn test
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhot:5432/postgres
