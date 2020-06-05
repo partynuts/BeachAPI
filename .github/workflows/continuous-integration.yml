@@ -41,4 +41,4 @@ jobs:
         run: yarn test
         # Environment variable used by the `client.js` script to create a new PostgreSQL client.
         env:
-          DATABASE_URL: postgres://postgres:postgres@0.0.0.0:5432/postgres
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
