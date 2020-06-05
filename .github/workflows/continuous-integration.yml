@@ -38,7 +38,8 @@ jobs:
       - name: Execute tests
         # Runs a script that creates a PostgreSQL client, populates
         # the client with data, and retrieves data
-        run: yarn test
+        #run: yarn test
+        run: node test.js
         # Environment variable used by the `client.js` script to create a new PostgreSQL client.
         env:
           DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
