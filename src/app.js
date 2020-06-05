@@ -11,7 +11,7 @@ module.exports = async ({ database = "beachapp", connectionString } = {}) => {
   app.use(morgan("dev"));
   app.use(bodyParser.json());
 
-  const dbConfig = connectionString ? { connectionString, ssl: true } :
+  const dbConfig = connectionString ? { connectionString } :
     {
       user: 'proghany',
       password: 'proghany',
