@@ -7,7 +7,7 @@ describe("users controller", () => {
   let app;
 
   beforeEach(async () => {
-    app = await App({connectionString: process.env.DATABASE_URL, database: "beachapptest" });
+    app = await App({ connectionString: process.env.DATABASE_URL, database: "beachapptest" });
 
     await sync({ force: true });
   });
@@ -105,4 +105,89 @@ describe("users controller", () => {
         });
     });
   });
+
+  describe("GET /users", () => {
+    it("should return empty array if no users are signed up", async () => {
+      await request(app)
+        .get('/users')
+        .expect(200, [])
+    });
+    it("should return all signed up users", async () => {
+      const user1 = await User.createUser({
+        username: "user1",
+        email: "email18"
+      });
+
+      const user2 = await User.createUser({
+        username: "user2",
+        email: "email12"
+      });
+
+      await request(app)
+        .get('/users')
+        .expect(200, [user1, user2])
+    })
+  });
+
+  describe("PATCH /users/:userId", async () => {
+    it("should return 404 if user is not found", async () => {
+      await request(app)
+        .patch('/users/5')
+        .expect(404)
+    });
+    it("should return 400 if no body is provided", async () => {
+      const user = await User.createUser({
+        username: "user1",
+        email: "email18",
+      });
+
+      await request(app)
+        .patch(`/users/${user.id}`)
+        .expect(400)
+    });
+
+    it("should return 200 and the updated user data", async () => {
+      const user = await User.createUser({
+        username: "user1",
+        email: "email18",
+      });
+
+      await request(app)
+        .patch(`/users/${user.id}`)
+        .send({ email: "neu@email.de" })
+        .expect(200, {...user, email: "neu@email.de"});
+
+      const updatedUser = await User.findUserById(user.id);
+      expect(updatedUser).to.deep.equal({...user, email: "neu@email.de"})
+    });
+
+    it ("should return 400 if body is invalid", async () => {
+      const user = await User.createUser({
+        username: "user1",
+        email: "email18",
+      });
+
+      await request(app)
+        .patch(`/users/${user.id}`)
+        .send("Hallo")
+        .expect(400)
+
+      await request(app)
+        .patch(`/users/${user.id}`)
+        .send("6")
+        .expect(400)
+    });
+
+    it.skip ("should return 400 if user changes their id", async () => {
+
+    });
+
+    it.skip ("should return 400 if user changes their email to another existing email", async () => {
+
+    });
+
+    it.skip ("should encrypt passwords", async () => {
+
+    });
+  })
 });

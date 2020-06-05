@@ -98,54 +98,52 @@ controller.post("/events/:eventId/cancel", async (req, res) => {
 
 /*
   TODO: Write many many tests and refactor it :)
-*/ 
+*/
 controller.get("/events", async (req, res) => {
   console.log("-------GETTING EVENT IN CONTROLLER-------")
 
-  const pastEvent = await findMostRecentPastEvent();
+  const pastEvents = await findMostRecentPastEvent();
+  const pastEvent = pastEvents[0] || null;
   const nextEvents = await findNextTwoEvents();
   let eventData = { pastEvent, nextEvents };
 
-  if (pastEvent[0]) {
-    const courtPricePast = await findCourtPriceByProviderName(pastEvent[0].location)
+  if (pastEvent) {
+    const courtPricePast = await findCourtPriceByProviderName(pastEvent.location)
 
     if (courtPricePast) {
-      console.log("COURT PRICE PAST", courtPricePast.price)
-      pastEvent[0].courtPrice = courtPricePast.price
+      console.log("COURT PRICE PAST", Number(courtPricePast.price))
+      pastEvent.courtPrice = Number(courtPricePast.price)
     }
   }
-  
+
   if (nextEvents[0]) {
     const courtPriceNext0 = await findCourtPriceByProviderName(nextEvents[0].location)
 
     if (courtPriceNext0) {
       console.log("COURT PRICE 0", courtPriceNext0)
-      nextEvents[0].courtPrice = courtPriceNext0.price;
+      nextEvents[0].courtPrice = Number(courtPriceNext0.price);
     }
   }
-  
+
   if (nextEvents[1]) {
     const courtPriceNext1 = await findCourtPriceByProviderName(nextEvents[1].location)
 
     if (courtPriceNext1) {
       console.log("COURT PRICE 1", courtPriceNext1)
-      nextEvents[1].courtPrice = courtPriceNext1.price
+      nextEvents[1].courtPrice = Number(courtPriceNext1.price)
     }
   }
 
-  if (pastEvent.length && pastEvent[0].participants !== null) {
-    console.log("-------------EINS-------------", pastEvent[0])
-    const pastEventUserData = await findUsersByIds(pastEvent[0].participants);
-    pastEvent[0].participants = pastEventUserData.map(user => user.username);
-    eventData.pastEvent = pastEvent[0];
-
+  if (pastEvent && pastEvent.participants !== null) {
+    console.log("-------------EINS-------------", pastEvent)
+    const pastEventUserData = await findUsersByIds(pastEvent.participants);
+    pastEvent.participants = pastEventUserData.map(user => user.username);
   }
   if (nextEvents.length && nextEvents[0].participants !== null) {
     console.log("-------------VIER-------------")
     const nextEventsUserData0 = await findUsersByIds(nextEvents[0].participants);
     nextEvents[0].participants = nextEventsUserData0.map(user => user.username);
     eventData.nextEvents[0] = nextEvents[0];
-
   }
   if (nextEvents.length && nextEvents[1] && nextEvents[1].participants !== null) {
     console.log("-------------DREI-------------")

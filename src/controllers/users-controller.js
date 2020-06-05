@@ -46,12 +46,12 @@ controller.patch("/users/:userId", async (req, res) => {
     return res.status(404).json({msg: "User not found!"})
   }
 
-  if (req.body) {
+  if (req.body && Object.keys(req.body).length > 0) {
     const updatedUserData = await updateUser(req.body, req.params.userId);
     // console.log("+++++updatedUserData+++", updatedUserData);
     return res.status(200).json(updatedUserData);
   }
-  res.status(400);
+  res.sendStatus(400);
 });
 
 
