@@ -7,8 +7,7 @@ const umzug = new Umzug({ /* ... options ... */ });
   const port = process.env.PORT || 3000;
   const models = require('./src/models');
 
-  // await models.sync({force: process.env.UPDATEDB});
-  await umzug.up();
+  await models.sync({force: process.env.UPDATEDB});
 
   app.listen(port, () => console.log(`BeachApp listening on port ${port}`));
 })();
@@ -18,7 +17,6 @@ process.on('SIGTERM', () => {
 });
 
 process.on('uncaughtException', handleException);
-
 process.on('unhandledRejection', handleException);
 
 function handleException(err) {
