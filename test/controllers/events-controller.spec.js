@@ -1,4 +1,6 @@
 const request = require("supertest");
+const notification = require("../../src/models/notification-model");
+const sinon = require("sinon");
 const App = require("../../src/app");
 const { Event, User, sync } = require("../../src/models");
 const { expect } = require("chai");
@@ -290,5 +292,124 @@ describe("events controller", () => {
     })
 
   });
+
+  describe("POST /events", () => {
+    it('should create an event with the data provided by the user', async () => {
+      await request(app)
+        .post('/events')
+        .send({
+          event_date: "2120-04-14T22:00:00.000Z",
+          number_of_fields: 2,
+          location: "Beach61",
+          creator_id: 47
+        })
+        .expect(201, {
+          id: 1,
+          event_date: "2120-04-14T22:00:00.000Z",
+          number_of_fields: 2,
+          location: "Beach61",
+          creator_id: 47,
+          participants: null,
+        })
+    });
+
+    it('should return 400 if invalid or incomplete data is provided', async () => {
+      await request(app)
+        .post('/events')
+        .send({
+          event_date: null,
+          number_of_fields: 2,
+          location: "Beach61",
+          creator_id: 47
+        })
+        .expect(400, { errorMsg: "All fields are required!" });
+
+      await request(app)
+        .post('/events')
+        .send({
+          event_date: "2120-04-14T22:00:00.000Z",
+          number_of_fields: 1,
+          location: null,
+          creator_id: 47
+        })
+        .expect(400, { errorMsg: "All fields are required!" });
+
+      await request(app)
+        .post('/events')
+        .send({
+          event_date: "2120-04-14T22:00:00.000Z",
+          number_of_fields: null,
+          location: "East61-indoor",
+          creator_id: 47
+        })
+        .expect(400, { errorMsg: "All fields are required!" });
+
+      await request(app)
+        .post('/events')
+        .send({
+          event_date: "2120-04-14T22:00:00.000Z",
+          number_of_fields: 2,
+          location: "East61-indoor",
+          creator_id: null
+        })
+        .expect(201)
+    });
+
+    it('should send a notification to all users with a token', async () => {
+      const user = await User.createUser({
+        username: "somebody",
+        email: "some@body.com",
+      });
+      const otherUser = await User.createUser({
+        username: "somebody else",
+        email: "somebody@else.com"
+      });
+      const creator = await User.createUser({
+        username: "creator",
+        email: "creator@else.com",
+      });
+
+      await User.updateUser({notifications_token: "my token creator"}, creator.id);
+      await User.updateUser({notifications_token: "my token user"}, user.id);
+
+      const mock = sinon.mock(notification);
+      mock.expects("sendPushNotification")
+        .withArgs(`New event for ${new Date('2120-04-14T22:00:00.000Z').toLocaleDateString()}`, ["my token user"], 1)
+        .once();
+
+      await request(app)
+        .post('/events')
+        .send({
+          event_date: "2120-04-14T22:00:00.000Z",
+          number_of_fields: 2,
+          location: "East61-indoor",
+          creator_id: creator.id
+        })
+        .expect(201);
+
+      mock.verify();
+      mock.restore();
+    });
+
+    it('should increase the booking count of the user who has created the event', async () => {
+      const user = await User.createUser({
+        username: "somebody",
+        email: "some@body.com",
+      });
+
+      await request(app)
+        .post('/events')
+        .send({
+          event_date: "2120-04-14T22:00:00.000Z",
+          number_of_fields: 2,
+          location: "East61-indoor",
+          creator_id: user.id
+        })
+        .expect(201);
+
+      const updatedUser = await User.findUserByUsername(user.username)
+      expect(updatedUser.booking_count).to.equal(1);
+    });
+  })
 });
 

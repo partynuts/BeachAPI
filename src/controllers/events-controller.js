@@ -19,17 +19,17 @@ const {
   findUserById
 } = require("../models/user-model");
 const { findCourtPriceByProviderName, findCourtProviderByName } = require("../models/court-model");
-const { sendPushNotification } = require("../models/notification-model");
+const Notification = require("../models/notification-model");
 
 controller.post("/events", async (req, res) => {
   console.log("-------CREATING EVENT IN CONTROLLER-------", req.body)
 
-  if (!req.body.event_date) {
-    return res.status(400).json({ errorMsg: "Event date is required!" })
+  if (!req.body.event_date || !req.body.location || !req.body.number_of_fields) {
+    return res.status(400).json({ errorMsg: "All fields are required!" })
   }
 
   const newEvent = await createEvent(req.body);
-  const increasedBookingCount = await addBookingCountToUser();
+  const increasedBookingCount = await addBookingCountToUser(req.body.creator_id);
   // console.log("HAS BOOKING COUNT INCREASED FOR ", req.body.creator_id, increasedBookingCount);
   // console.log("-------NEW EVENT----- ", newEvent);
 
@@ -38,7 +38,7 @@ controller.post("/events", async (req, res) => {
   const notificationTokens = allUsersWithToken.filter(user => user.id !== req.body.creator_id).map(user => user.notifications_token)
   // console.log("@@@@@@@@@@@ NOTIFICTAIONS TOKENS @@@@@@", notificationTokens);
 
-  const sentNotifications = sendPushNotification(`New event for ${newEvent.event_date.toLocaleDateString()}`, notificationTokens, newEvent.id);
+  const sentNotifications = Notification.sendPushNotification(`New event for ${newEvent.event_date.toLocaleDateString()}`, notificationTokens, newEvent.id);
   res.status(201).json(newEvent)
 });
 

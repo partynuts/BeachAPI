@@ -14,12 +14,13 @@ const user = module.exports = {
     })
   },
 
-  addBookingCountToUser() {
+  addBookingCountToUser(userId) {
     console.log("INCREASING COUNT OF USER IN DB")
     return global.client.query(`
         UPDATE users
         SET booking_count = booking_count + 1
-    `)
+        WHERE id = $1
+    `, [userId])
       .then(res => {
         return res.rows[0]
       })
