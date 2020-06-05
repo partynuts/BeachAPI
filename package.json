@@ -9,7 +9,8 @@
   "private": true,
   "scripts": {
     "start": "node index.js",
-    "test": "mocha --exit -t 10000 test/**/*.spec.js"
+    "test": "mocha --exit -t 10000 test/**/*.spec.js",
+    "coverage": "nyc yarn test"
   },
   "dependencies": {
     "body-parser": "^1.19.0",
@@ -26,6 +27,7 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "mocha": "^7.1.0",
+    "nyc": "^15.1.0",
     "supertest": "^4.0.2"
   }
 }
