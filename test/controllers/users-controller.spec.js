@@ -7,7 +7,7 @@ describe("users controller", () => {
   let app;
 
   beforeEach(async () => {
-    app = await App({ database: "beachapptest" });
+    app = await App({connectionString: process.env.DATABASE_URL, database: "beachapptest" });
 
     await sync({ force: true });
   });

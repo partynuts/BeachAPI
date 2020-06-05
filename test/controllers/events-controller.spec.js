@@ -7,7 +7,7 @@ describe("events controller", () => {
   let app;
 
   beforeEach(async () => {
-    app = await App({ database: "beachapptest" });
+    app = await App({connectionString: process.env.DATABASE_URL, database: "beachapptest" });
 
     await sync({ force: true });
   });
@@ -33,7 +33,7 @@ describe("events controller", () => {
             creator_id: 1,
           }),
         ];
-  
+
         await request(app)
           .get("/events")
           .expect(200)
