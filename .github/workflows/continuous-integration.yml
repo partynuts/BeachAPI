@@ -1,8 +1,8 @@
-name: Build and run
+name: BeachAPI
 on: [push]
 jobs:
   build:
-    name: Build
+    name: Build (Unit tests)
     runs-on: ubuntu-latest
 
     services:
