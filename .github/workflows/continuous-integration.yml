@@ -1,0 +1,16 @@
+name: Beach API CI
+# This workflow is triggered on pushes to the repository.
+on: [push]
+
+jobs:
+  build:
+    # Job name is Greeting
+    name: Testrun
+    # This job runs on Linux
+    runs-on: ubuntu-latest
+    steps:
+      # This step uses GitHub's hello-world-javascript-action: https://github.com/actions/hello-world-javascript-action
+      - name: install dependencies
+        run: yarn
+      - name: Execute tests
+        run: yarn test
