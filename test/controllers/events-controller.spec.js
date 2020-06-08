@@ -549,7 +549,7 @@ describe("events controller", () => {
 
       const mock = sinon.mock(notification);
       mock.expects("sendPushNotification")
-        // .withExactArgs(`${user.username} has cancelled for 3/15/2020!`, ["my token otherUser"], 1)
+        .withExactArgs(`${user.username} has cancelled for 3/15/2020!`, ["my token otherUser"], "1")
         .returns(Promise.resolve())
         .once();
 
