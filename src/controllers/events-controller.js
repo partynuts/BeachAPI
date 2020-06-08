@@ -45,7 +45,7 @@ controller.post("/events", async (req, res) => {
 controller.post("/events/:eventId/signup", async (req, res) => {
   // console.log("-------SIGNING UP FOR EVENT IN CONTROLLER-------", req.body)
 
-  if (!req.body.userId || !req.params.eventId) {
+  if (!req.body.userId) {
     return res.sendStatus(400)
   }
   const foundEvent = await findEventById(req.params.eventId);
@@ -74,25 +74,24 @@ controller.post("/events/:eventId/signup", async (req, res) => {
 controller.post("/events/:eventId/cancel", async (req, res) => {
   // console.log("-------CANCELLING FOR EVENT IN CONTROLLER-------", req.body)
 
-  if (!req.body.userId || !req.params.eventId) {
+  if (!req.body.userId) {
     return res.sendStatus(400)
   }
 
   const updatedParticipants = await cancelUserFromEvent(req.body.userId, req.params.eventId);
   const userData = await findUsersByIds(updatedParticipants.participants);
+
   updatedParticipants.participants = userData.map(user => user.username);
+
   const eventData = await findEventById(req.params.eventId);
   console.log("EVENT DATA", (new Date(eventData.event_date)).toLocaleDateString('de-DE'));
-// console.log("USERDATA", userData)
+
   const allUsersWithToken = Array.from(await getAllUsersWithToken());
-  // console.log("AAAAALL THE USERS WITH TOKEN", allUsersWithToken)
   const notificationTokens = allUsersWithToken.filter(user => user.id !== req.body.userId).map(user => user.notifications_token)
-  // console.log("@@@@@@@@@@@ NOTIFICTAIONS TOKENS @@@@@@", notificationTokens);
   const cancellingUser = await findUserById(req.body.userId);
-  // console.log("CANCELLING USER", cancellingUser);
 
-  const sentNotifications = sendPushNotification(`${cancellingUser.username} has cancelled for ${(new Date(eventData.event_date)).toLocaleDateString('de-DE')}!`, notificationTokens, req.params.eventId);
-
+  console.log("CANCELLATION!!!!!!", `${cancellingUser.username} has cancelled for ${(new Date(eventData.event_date)).toLocaleDateString('de-DE')}!`, notificationTokens, req.params.eventId)
+  const sentNotifications = Notification.sendPushNotification(`${cancellingUser.username} has cancelled for ${(new Date(eventData.event_date)).toLocaleDateString('de-DE')}!`, notificationTokens, req.params.eventId);
   res.status(200).json(updatedParticipants)
 });
 
@@ -167,10 +166,10 @@ controller.get("/events/:eventId/calendar", async (req, res) => {
   const value = await createCalendarEvent(foundEvent)
   console.log("VALUE OF CREATE CAL EVE", value)
 
-    res.set('Content-Type', 'text/calendar;charset=utf-8');
-    res.set('Content-Disposition', 'attachment; filename="beachen.pro.calendar.my.ics"');
-    console.log("iCal String", value);
-    return res.send(value);
+  res.set('Content-Type', 'text/calendar;charset=utf-8');
+  res.set('Content-Disposition', 'attachment; filename="beachen.pro.calendar.my.ics"');
+  console.log("iCal String", value);
+  return res.send(value);
 
 });
 

@@ -229,7 +229,11 @@ describe("events controller", () => {
         .expect({
           pastEvent: null,
           nextEvents: [
-            { ...nextEvents[0], event_date: '2120-04-14T22:00:00.000Z', participants: [user.username, otherUser.username] },
+            {
+              ...nextEvents[0],
+              event_date: '2120-04-14T22:00:00.000Z',
+              participants: [user.username, otherUser.username]
+            },
             { ...nextEvents[1], event_date: '2120-04-15T22:00:00.000Z', participants: [otherUser.username] }
           ]
         });
@@ -283,10 +287,25 @@ describe("events controller", () => {
         .get("/events")
         .expect(200)
         .expect({
-          pastEvent: { ...pastEvent, event_date: '2020-03-14T23:00:00.000Z', participants: [otherUser.username], courtPrice: 20},
+          pastEvent: {
+            ...pastEvent,
+            event_date: '2020-03-14T23:00:00.000Z',
+            participants: [otherUser.username],
+            courtPrice: 20
+          },
           nextEvents: [
-            { ...nextEvents[0], event_date: '2120-04-14T22:00:00.000Z', participants: [user.username, otherUser.username], courtPrice: 20},
-            { ...nextEvents[1], event_date: '2120-04-15T22:00:00.000Z', participants: [otherUser.username], courtPrice: 36 }
+            {
+              ...nextEvents[0],
+              event_date: '2120-04-14T22:00:00.000Z',
+              participants: [user.username, otherUser.username],
+              courtPrice: 20
+            },
+            {
+              ...nextEvents[1],
+              event_date: '2120-04-15T22:00:00.000Z',
+              participants: [otherUser.username],
+              courtPrice: 36
+            }
           ]
         });
     })
@@ -369,8 +388,8 @@ describe("events controller", () => {
         email: "creator@else.com",
       });
 
-      await User.updateUser({notifications_token: "my token creator"}, creator.id);
-      await User.updateUser({notifications_token: "my token user"}, user.id);
+      await User.updateUser({ notifications_token: "my token creator" }, creator.id);
+      await User.updateUser({ notifications_token: "my token user" }, user.id);
 
       const mock = sinon.mock(notification);
       mock.expects("sendPushNotification")
@@ -410,6 +429,138 @@ describe("events controller", () => {
       const updatedUser = await User.findUserByUsername(user.username)
       expect(updatedUser.booking_count).to.equal(1);
     });
-  })
+  });
+
+  describe("POST /events/:eventId/signup", () => {
+    let user;
+    let event;
+
+    beforeEach(async () => {
+      user = await User.createUser({
+        username: "somebody else",
+        email: "somebody@else.com"
+      });
+
+      event = await Event.createEvent({
+        event_date: new Date("2020/03/15"),
+        number_of_fields: 2,
+        location: "Beach61",
+        creator_id: user.id
+      });
+    });
+
+    it('should return 400 if userId are missing', async () => {
+      await request(app)
+        .post("/events/1/signup")
+        .send({})
+        .expect(400);
+    });
+
+    it('should return 404 if the event does not exist', async () => {
+      await request(app)
+        .post("/events/5/signup")
+        .send({ userId: user.id })
+        .expect(404);
+    });
+
+    it('should return 201 and sign up the user for event if still capacities given', async () => {
+      await request(app)
+        .post(`/events/${event.id}/signup`)
+        .send({ userId: user.id })
+        .expect(201);
+    });
+
+    it('should return 403 if user is already signed up', async () => {
+      await Event.signUpUserForEvent(user.id, event);
+
+      await request(app)
+        .post(`/events/${event.id}/signup`)
+        .send({ userId: user.id })
+        .expect(403, { msg: "You are already signed up for this event!" });
+    });
+
+    it('should return 403 if maximum number of participants is already reached', async () => {
+      const user2 = await User.createUser({
+        username: "user2 ",
+        email: "user2@else.com"
+      });
+      const user3 = await User.createUser({
+        username: "user3 ",
+        email: "user3@else.com"
+      });
+
+      await Event.signUpUserForEvent(user.id, event);
+      await Event.signUpUserForEvent(user2.id, event);
+
+      await request(app)
+        .post(`/events/${event.id}/signup`)
+        .send({ userId: user3.id })
+        .expect(403, { msg: "Maximum number of participants is already reached. You cannot sign up for this event at the moment." });
+    })
+  });
+
+  describe("POST /events/:eventId/cancel", () => {
+    let user;
+    let event;
+
+
+    beforeEach(async () => {
+      user = await User.createUser({
+        username: "somebody else",
+        email: "somebody@else.com"
+      });
+
+      event = await Event.createEvent({
+        event_date: new Date("2020/03/15"),
+        number_of_fields: 2,
+        location: "Beach61",
+        creator_id: user.id
+      });
+
+      await Event.signUpUserForEvent(user.id, event);
+
+    });
+
+    it('should return 400 if userId is missing', async () => {
+      await request(app)
+        .post(`/events/${event.id}/cancel`)
+        .send({})
+        .expect(400);
+    });
+
+    it('should return 200 and remove user from event if userId is provided', async () => {
+      await request(app)
+        .post(`/events/${event.id}/cancel`)
+        .send({ userId: user.id })
+        .expect(200);
+    });
+
+    it('should send a notification to all users with a token', async () => {
+      const otherUser = await User.createUser({
+        username: "user2",
+        email: "other@else.com"
+      });
+      const user3 = await User.createUser({
+        username: "user3",
+        email: "canceller@else.com",
+      });
+
+      await User.updateUser({ notifications_token: "my token otherUser" }, otherUser.id);
+
+      const mock = sinon.mock(notification);
+      mock.expects("sendPushNotification")
+        // .withExactArgs(`${user.username} has cancelled for 3/15/2020!`, ["my token otherUser"], 1)
+        .returns(Promise.resolve())
+        .once();
+
+      await request(app)
+        .post(`/events/${event.id}/cancel`)
+        .send({ userId: user.id })
+        .expect(200);
+
+      mock.verify();
+      mock.restore();
+    });
+  });
 });
 
