@@ -70,7 +70,7 @@ controller.post("/events/:eventId/signup", async (req, res) => {
 });
 
 controller.put("/events/:eventId/guests", async (req, res) => {
-  console.log("SIGNING UP GUESTS");
+
 });
 
 controller.post("/events/:eventId/cancel", async (req, res) => {

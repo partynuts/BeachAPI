@@ -1,12 +1,18 @@
 const ics = require('ics');
 const SIGNUP_ALLOWED = 'signupAllowed';
+const REDUCED_SIGNUP_ALLOWED = 'reducedSignupAllowed';
 const SIGNUP_FORBIDDEN_MAX_REACHED = 'signupForbiddenMaxReached';
 const SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP = 'signupForbiddenAlreadySignedUp';
+const SIGNUP_FORBIDDEN_NOT_SIGNED_UP = 'signupForbiddenNotSignedUp';
 const { findCourtProviderByName } = require("../models/court-model");
 const { getParticipantsCount, getEnrollmentsForEvent } = require("../models/enrollment-model");
 
 const Event = module.exports = {
-  SIGNUP_ALLOWED, SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP, SIGNUP_FORBIDDEN_MAX_REACHED,
+  SIGNUP_ALLOWED,
+  SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP,
+  SIGNUP_FORBIDDEN_MAX_REACHED,
+  SIGNUP_FORBIDDEN_NOT_SIGNED_UP,
+  REDUCED_SIGNUP_ALLOWED,
 
   createEvent({ event_date, number_of_fields, location, creator_id }) {
     console.log("CREATING EVENT IN DB")
@@ -83,11 +89,7 @@ const Event = module.exports = {
   //     })
   // },
 
-  async checkIfSignUpStillPossible(userId, event) {
-    console.log("Checking sign UP FOR EVENT IN DB", userId, event)
-
-    console.log("RIGHT EVENT?========================", event)
-
+  getParticipationCondition(event) {
     const participationConditions = [
       {
         numberOfFields: 1,
@@ -95,7 +97,7 @@ const Event = module.exports = {
       },
       {
         numberOfFields: 2,
-        maxNumberOfParticipants: 2
+        maxNumberOfParticipants: 3
       },
       {
         numberOfFields: 3,
@@ -106,8 +108,17 @@ const Event = module.exports = {
         maxNumberOfParticipants: 2
       }
     ];
+
+    return participationConditions.find(config => event.number_of_fields === config.numberOfFields);
+  },
+
+  async checkIfSignUpStillPossible(userId, event) {
+    console.log("Checking sign UP FOR EVENT IN DB", userId, event)
+
+    console.log("RIGHT EVENT?========================", event)
+
     const participantsCount = await getParticipantsCount(event.id);
-    const participationCondition = participationConditions.find(config => event.number_of_fields === config.numberOfFields);
+    const participationCondition = getParticipationCondition(event);
     const participantsAllowed = participationCondition && participantsCount < participationCondition.maxNumberOfParticipants;
     const enrollments = await getEnrollmentsForEvent(event.id);
 
@@ -120,7 +131,42 @@ const Event = module.exports = {
     } else {
       return SIGNUP_ALLOWED;
     }
+  },
 
+  async checkIfGuestsAreWelcome(event, userId, guestCount) {
+    const participantsCount = await getParticipantsCount(event.id);
+    const participationCondition = Event.getParticipationCondition(event);
+    const capacity = participationCondition.maxNumberOfParticipants - participantsCount;
+    const participantsAllowed = capacity > 0;
+    const enrollments = await getEnrollmentsForEvent(event.id);
+    const curEnrollmentForUser = enrollments.find(enrollment => enrollment.user_id === userId);
+
+    if (!curEnrollmentForUser) {
+      return {
+        status: SIGNUP_FORBIDDEN_NOT_SIGNED_UP,
+        capacity
+      }
+    }
+
+    const guestDelta = guestCount - curEnrollmentForUser.guests;
+
+    if (!participantsAllowed && guestDelta > 0) {
+      return {
+        status: SIGNUP_FORBIDDEN_MAX_REACHED,
+        capacity
+      };
+    }
+    if (capacity < guestDelta) {
+      return {
+        status: REDUCED_SIGNUP_ALLOWED,
+        capacity
+      };
+    }
+
+    return {
+      status: SIGNUP_ALLOWED,
+      capacity
+    }
   },
 
   findEventById(eventId) {
