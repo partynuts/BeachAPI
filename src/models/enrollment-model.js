@@ -35,15 +35,18 @@ const Enrollment = module.exports = {
   },
 
   setGuestsForEnrollment(enrollment, guestCount) {
+    console.log("-----ADDING GUESTS-----");
+
     return global.client.query(`
-      UPDATE enrollments 
-      SET guests = $1
-      WHERE user_id = $2 AND event_id = $3
+        UPDATE enrollments
+        SET guests = $1
+        WHERE user_id = $2
+          AND event_id = $3
     `, [guestCount, enrollment.user_id, enrollment.event_id])
   },
 
   enrollUserForEvent(userId, event) {
-    console.log("SIGNING UP FOR EVENT IN DB", userId, event)
+    console.log("SIGNING UP FOR EVENT IN DB", userId, event);
 
     return global.client.query(`
         INSERT INTO enrollments (user_id, event_id)

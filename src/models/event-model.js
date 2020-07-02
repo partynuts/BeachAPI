@@ -53,42 +53,6 @@ const Event = module.exports = {
       })
   },
 
-  // cancelUserFromEvent(userId, eventId) {
-  //   console.log("Cancelling FOR EVENT IN DB", userId, eventId)
-  //   return Event.findEventById(eventId).then(res => {
-  //     return global.client.query(`
-  //         UPDATE events
-  //         SET participants = array_remove(participants, $1)
-  //         WHERE id = $2
-  //         RETURNING *
-  //     `, [userId, eventId])
-  //       .then(res => {
-  //         console.log("NEUE TEILNEHMER", res.rows[0])
-  //         return res.rows[0]
-  //       })
-  //   })
-  // },
-
-  // signUpUserForEvent(userId, event) {
-  //   console.log("SIGNING UP FOR EVENT IN DB", userId, event)
-  //
-  //   if (!event.participants) {
-  //     event.participants = [userId]
-  //   } else {
-  //     event.participants.push(userId);
-  //   }
-  //
-  //   return global.client.query(`
-  //       UPDATE events
-  //       SET participants = $1
-  //       WHERE id = $2
-  //       RETURNING *
-  //   `, [event.participants, event.id])
-  //     .then(res => {
-  //       return res.rows[0]
-  //     })
-  // },
-
   getParticipationCondition(event) {
     const participationConditions = [
       {

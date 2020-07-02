@@ -10,6 +10,7 @@ const {
   cancelUserFromEvent,
   findEventById,
   createCalendarEvent,
+  checkIfGuestsAreWelcome,
   SIGNUP_ALLOWED, SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP, SIGNUP_FORBIDDEN_MAX_REACHED
 } = require("../models/event-model")
 const {
@@ -19,7 +20,7 @@ const {
   findUserById
 } = require("../models/user-model");
 const { findCourtPriceByProviderName, findCourtProviderByName } = require("../models/court-model");
-const { enrollUserForEvent, addParticipants, removeUserFromEvent } = require('../models/enrollment-model');
+const { enrollUserForEvent, addParticipants, removeUserFromEvent, setGuestsForEnrollment } = require('../models/enrollment-model');
 const Notification = require("../models/notification-model");
 
 controller.post("/events", async (req, res) => {
@@ -50,6 +51,7 @@ controller.post("/events/:eventId/signup", async (req, res) => {
     return res.sendStatus(400)
   }
   const foundEvent = await findEventById(req.params.eventId);
+
   if (!foundEvent) {
     return res.sendStatus(404)
   }
@@ -70,7 +72,35 @@ controller.post("/events/:eventId/signup", async (req, res) => {
 });
 
 controller.put("/events/:eventId/guests", async (req, res) => {
+  if (!req.body.userId) {
+    return res.sendStatus(400)
+  }
 
+  const foundEvent = await findEventById(req.params.eventId);
+  if (!foundEvent) {
+    return res.sendStatus(404)
+  }
+
+  const enrollment = await getEnrollmentsForEvent(foundEvent.id);
+
+  const guestWelcomeChecked = await checkIfGuestsAreWelcome(foundEvent, req.body.userId, req.body.guestCount)
+
+  if (guestWelcomeChecked.status === SIGNUP_FORBIDDEN_MAX_REACHED) {
+    return res.status(403).json({ msg: "Maximum number of participants is already reached. You cannot sign up anyone for this event at the moment." });
+  }
+  if (guestWelcomeChecked.status === SIGNUP_FORBIDDEN_NOT_SIGNED_UP) {
+    return res.status(403).json({ msg: "You are not signed up for this event!" });
+  }
+  if (guestWelcomeChecked.status === REDUCED_SIGNUP_ALLOWED) {
+    return res.json({
+      enrollment: await setGuestsForEnrollment(enrollment, guestWelcomeChecked.capacity),
+      msg: `The capacity was lower than your request. ${guestWelcomeChecked.capacity} guests have been added.`
+    })
+  }
+  return res.json({
+    enrollment: await setGuestsForEnrollment(enrollment, req.body.guestCount),
+    msg: `${req.body.guestCount} guests have been added.`
+  })
 });
 
 controller.post("/events/:eventId/cancel", async (req, res) => {
