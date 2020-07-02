@@ -2,7 +2,7 @@ const request = require("supertest");
 const notification = require("../../src/models/notification-model");
 const sinon = require("sinon");
 const App = require("../../src/app");
-const { Event, User, sync } = require("../../src/models");
+const { Event, User, Enrollment, sync } = require("../../src/models");
 const { expect } = require("chai");
 
 describe("events controller", () => {
@@ -48,7 +48,7 @@ describe("events controller", () => {
               number_of_fields: 2,
               location: "irgendwo",
               creator_id: 1,
-              participants: null,
+              participants: [],
             },
           ],
         });
@@ -95,7 +95,7 @@ describe("events controller", () => {
               number_of_fields: 2,
               location: "irgendwo",
               creator_id: 1,
-              participants: null
+              participants: []
             },
           nextEvents: [
             {
@@ -104,7 +104,7 @@ describe("events controller", () => {
               number_of_fields: 2,
               location: "irgendwo",
               creator_id: 1,
-              participants: null
+              participants: []
             },
             {
               id: 3,
@@ -112,7 +112,7 @@ describe("events controller", () => {
               number_of_fields: 2,
               location: "irgendwo",
               creator_id: 1,
-              participants: null
+              participants: []
             }
           ]
         });
@@ -134,7 +134,7 @@ describe("events controller", () => {
         location: "irgendwo",
         creator_id: user.id
       });
-      await Event.signUpUserForEvent(otherUser.id, pastEvent);
+      await Enrollment.enrollUserForEvent(otherUser.id, pastEvent);
 
       await request(app)
         .get("/events")
@@ -168,8 +168,8 @@ describe("events controller", () => {
         location: "irgendwo",
         creator_id: user.id
       });
-      await Event.signUpUserForEvent(otherUser.id, pastEvent);
-      await Event.cancelUserFromEvent(otherUser.id, pastEvent.id)
+      await Enrollment.enrollUserForEvent(otherUser.id, pastEvent);
+      await Enrollment.removeUserFromEvent(otherUser.id, pastEvent)
 
       await request(app)
         .get("/events")
@@ -219,9 +219,9 @@ describe("events controller", () => {
         email: "somebody@else.com"
       });
 
-      await Event.signUpUserForEvent(user.id, nextEvents[0]);
-      await Event.signUpUserForEvent(otherUser.id, nextEvents[0]);
-      await Event.signUpUserForEvent(otherUser.id, nextEvents[1]);
+      await Enrollment.enrollUserForEvent(user.id, nextEvents[0]);
+      await Enrollment.enrollUserForEvent(otherUser.id, nextEvents[0]);
+      await Enrollment.enrollUserForEvent(otherUser.id, nextEvents[1]);
 
       await request(app)
         .get("/events")
@@ -278,10 +278,10 @@ describe("events controller", () => {
       });
 
 
-      await Event.signUpUserForEvent(user.id, nextEvents[0]);
-      await Event.signUpUserForEvent(otherUser.id, nextEvents[0]);
-      await Event.signUpUserForEvent(otherUser.id, nextEvents[1]);
-      await Event.signUpUserForEvent(otherUser.id, pastEvent);
+      await Enrollment.enrollUserForEvent(user.id, nextEvents[0]);
+      await Enrollment.enrollUserForEvent(otherUser.id, nextEvents[0]);
+      await Enrollment.enrollUserForEvent(otherUser.id, nextEvents[1]);
+      await Enrollment.enrollUserForEvent(otherUser.id, pastEvent);
 
       await request(app)
         .get("/events")
@@ -471,7 +471,7 @@ describe("events controller", () => {
     });
 
     it('should return 403 if user is already signed up', async () => {
-      await Event.signUpUserForEvent(user.id, event);
+      await Enrollment.enrollUserForEvent(user.id, event);
 
       await request(app)
         .post(`/events/${event.id}/signup`)
@@ -489,8 +489,8 @@ describe("events controller", () => {
         email: "user3@else.com"
       });
 
-      await Event.signUpUserForEvent(user.id, event);
-      await Event.signUpUserForEvent(user2.id, event);
+      await Enrollment.enrollUserForEvent(user.id, event);
+      await Enrollment.enrollUserForEvent(user2.id, event);
 
       await request(app)
         .post(`/events/${event.id}/signup`)
@@ -517,7 +517,7 @@ describe("events controller", () => {
         creator_id: user.id
       });
 
-      await Event.signUpUserForEvent(user.id, event);
+      await Enrollment.enrollUserForEvent(user.id, event);
 
     });
 

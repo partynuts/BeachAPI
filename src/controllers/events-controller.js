@@ -19,6 +19,7 @@ const {
   findUserById
 } = require("../models/user-model");
 const { findCourtPriceByProviderName, findCourtProviderByName } = require("../models/court-model");
+const { enrollUserForEvent, addParticipants, removeUserFromEvent } = require('../models/enrollment-model');
 const Notification = require("../models/notification-model");
 
 controller.post("/events", async (req, res) => {
@@ -53,22 +54,23 @@ controller.post("/events/:eventId/signup", async (req, res) => {
     return res.sendStatus(404)
   }
 
-  const signUpChecked = checkIfSignUpStillPossible(req.body.userId, foundEvent);
+  const signUpChecked = await checkIfSignUpStillPossible(req.body.userId, foundEvent);
 
-  if (signUpChecked === SIGNUP_ALLOWED) {
-    const newParticipant = await signUpUserForEvent(req.body.userId, foundEvent);
-    const userData = await findUsersByIds(newParticipant.participants);
-    newParticipant.participants = userData.map(user => user.username);
-
-    // console.log("NEW PARTICIPANTS", newParticipant);
-    return res.status(201).json(newParticipant)
-  }
   if (signUpChecked === SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP) {
     return res.status(403).json({ msg: "You are already signed up for this event!" });
   }
   if (signUpChecked === SIGNUP_FORBIDDEN_MAX_REACHED) {
     return res.status(403).json({ msg: "Maximum number of participants is already reached. You cannot sign up for this event at the moment." });
   }
+
+  const newParticipant = await enrollUserForEvent(req.body.userId, foundEvent);
+
+  // console.log("NEW PARTICIPANTS", newParticipant);
+  return res.status(201).json(await addParticipants(foundEvent))
+});
+
+controller.put("/events/:eventId/guests", async (req, res) => {
+  console.log("SIGNING UP GUESTS");
 });
 
 controller.post("/events/:eventId/cancel", async (req, res) => {
@@ -77,13 +79,11 @@ controller.post("/events/:eventId/cancel", async (req, res) => {
   if (!req.body.userId) {
     return res.sendStatus(400)
   }
-
-  const updatedParticipants = await cancelUserFromEvent(req.body.userId, req.params.eventId);
-  const userData = await findUsersByIds(updatedParticipants.participants);
-
-  updatedParticipants.participants = userData.map(user => user.username);
-
   const eventData = await findEventById(req.params.eventId);
+
+  await removeUserFromEvent(req.body.userId, eventData);
+  await addParticipants(eventData);
+
   console.log("EVENT DATA", (new Date(eventData.event_date)).toLocaleDateString('de-DE'));
 
   const allUsersWithToken = Array.from(await getAllUsersWithToken());
@@ -92,7 +92,7 @@ controller.post("/events/:eventId/cancel", async (req, res) => {
 
   console.log("CANCELLATION!!!!!!", `${cancellingUser.username} has cancelled for ${(new Date(eventData.event_date)).toLocaleDateString('de-DE')}!`, notificationTokens, req.params.eventId)
   const sentNotifications = Notification.sendPushNotification(`${cancellingUser.username} has cancelled for ${(new Date(eventData.event_date)).toLocaleDateString('de-DE')}!`, notificationTokens, req.params.eventId);
-  res.status(200).json(updatedParticipants)
+  res.status(200).json(eventData)
 });
 
 /*
@@ -108,6 +108,7 @@ controller.get("/events", async (req, res) => {
 
   if (pastEvent) {
     const courtPricePast = await findCourtPriceByProviderName(pastEvent.location)
+    await addParticipants(pastEvent);
 
     if (courtPricePast) {
       console.log("COURT PRICE PAST", Number(courtPricePast.price))
@@ -117,6 +118,7 @@ controller.get("/events", async (req, res) => {
 
   if (nextEvents[0]) {
     const courtPriceNext0 = await findCourtPriceByProviderName(nextEvents[0].location)
+    eventData.nextEvents[0] = await addParticipants(nextEvents[0]);
 
     if (courtPriceNext0) {
       console.log("COURT PRICE 0", courtPriceNext0)
@@ -126,32 +128,13 @@ controller.get("/events", async (req, res) => {
 
   if (nextEvents[1]) {
     const courtPriceNext1 = await findCourtPriceByProviderName(nextEvents[1].location)
+    eventData.nextEvents[1] = await addParticipants(nextEvents[1])
 
     if (courtPriceNext1) {
       console.log("COURT PRICE 1", courtPriceNext1)
       nextEvents[1].courtPrice = Number(courtPriceNext1.price)
     }
   }
-
-  if (pastEvent && pastEvent.participants !== null) {
-    console.log("-------------EINS-------------", pastEvent)
-    const pastEventUserData = await findUsersByIds(pastEvent.participants);
-    pastEvent.participants = pastEventUserData.map(user => user.username);
-  }
-  if (nextEvents.length && nextEvents[0].participants !== null) {
-    console.log("-------------VIER-------------")
-    const nextEventsUserData0 = await findUsersByIds(nextEvents[0].participants);
-    nextEvents[0].participants = nextEventsUserData0.map(user => user.username);
-    eventData.nextEvents[0] = nextEvents[0];
-  }
-  if (nextEvents.length && nextEvents[1] && nextEvents[1].participants !== null) {
-    console.log("-------------DREI-------------")
-    const nextEventsUserData1 = await findUsersByIds(nextEvents[1].participants);
-    nextEvents[1].participants = nextEventsUserData1.map(user => user.username);
-    eventData.nextEvents[1] = nextEvents[1];
-
-  }
-
 
   console.log("EVENT DATA IN HOME", eventData);
   return res.status(200).json(eventData)
