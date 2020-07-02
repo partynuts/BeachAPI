@@ -65,7 +65,7 @@ const Event = module.exports = {
       },
       {
         numberOfFields: 3,
-        maxNumberOfParticipants: 2
+        maxNumberOfParticipants: 5
       },
       {
         numberOfFields: 4,
@@ -82,7 +82,7 @@ const Event = module.exports = {
     console.log("RIGHT EVENT?========================", event)
 
     const participantsCount = await getParticipantsCount(event.id);
-    const participationCondition = getParticipationCondition(event);
+    const participationCondition = Event.getParticipationCondition(event);
     const participantsAllowed = participationCondition && participantsCount < participationCondition.maxNumberOfParticipants;
     const enrollments = await getEnrollmentsForEvent(event.id);
 

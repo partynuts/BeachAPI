@@ -14,6 +14,19 @@ const Enrollment = module.exports = {
       })
   },
 
+  getSingleEnrollmentForEvent(eventId, userId) {
+    return global.client.query(`
+        SELECT *
+        FROM enrollments
+        WHERE event_id = $1
+          AND user_id = $2
+    `, [eventId, userId])
+      .then(res => {
+        console.log("RES", res.rows);
+        return res.rows[0]
+      })
+  },
+
   async getParticipantsCount(eventId) {
     const enrollments = await Enrollment.getEnrollmentsForEvent(eventId);
     console.log("ENROLLMENTS", enrollments);
@@ -41,8 +54,12 @@ const Enrollment = module.exports = {
         UPDATE enrollments
         SET guests = $1
         WHERE user_id = $2
-          AND event_id = $3
+        AND event_id = $3
+        RETURNING *
     `, [guestCount, enrollment.user_id, enrollment.event_id])
+      .then(res => {
+        return res.rows[0]
+      })
   },
 
   enrollUserForEvent(userId, event) {
