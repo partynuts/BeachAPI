@@ -30,7 +30,7 @@ const {
   removeUserFromEvent,
   setGuestsForEnrollment,
   getSingleEnrollmentForEvent,
-  getEnrollmentsForEvent
+  getParticipantsCount
 } = require('../models/enrollment-model');
 const Notification = require("../models/notification-model");
 
@@ -99,22 +99,29 @@ controller.put("/events/:eventId/guests", async (req, res) => {
   if (guestWelcomeChecked.status === SIGNUP_FORBIDDEN_MAX_REACHED) {
     return res.status(403).json({
       enrollment,
-      msg: "Maximum number of participants is already reached. You cannot sign up anyone for this event at the moment." });
+      msg: "Maximum number of participants is already reached. You cannot sign up anyone for this event at the moment.",
+      totalParticipants: await getParticipantsCount(foundEvent.id)
+
+    });
   }
   if (guestWelcomeChecked.status === SIGNUP_FORBIDDEN_NOT_SIGNED_UP) {
     return res.status(403).json({
       enrollment,
-      msg: "You are not signed up for this event!" });
+      msg: "You are not signed up for this event!",
+      totalParticipants: await getParticipantsCount(foundEvent.id)
+    });
   }
   if (guestWelcomeChecked.status === REDUCED_SIGNUP_ALLOWED) {
     return res.json({
-      enrollment: await setGuestsForEnrollment(enrollment, guestWelcomeChecked.capacity+enrollment.guests),
-      msg: `The capacity was lower than your request. You'll bring ${guestWelcomeChecked.capacity+enrollment.guests} guests.`
+      enrollment: await setGuestsForEnrollment(enrollment, guestWelcomeChecked.capacity + enrollment.guests),
+      msg: `The capacity was lower than your request. You'll bring ${guestWelcomeChecked.capacity + enrollment.guests} guests.`,
+      totalParticipants: await getParticipantsCount(foundEvent.id)
     })
   }
   return res.json({
     enrollment: await setGuestsForEnrollment(enrollment, req.body.guestCount),
-    msg: `${req.body.guestCount} guests have been added.`
+    msg: `${req.body.guestCount} guests have been added.`,
+    totalParticipants: await getParticipantsCount(foundEvent.id)
   })
 });
 
