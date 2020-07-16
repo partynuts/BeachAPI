@@ -26,6 +26,18 @@ const Event = module.exports = {
       })
   },
 
+  updateEvent({event_date, number_of_fields, location, creator_id, eventId}) {
+    return global.client.query(`
+        UPDATE events
+        SET event_date = $1, number_of_fields = $2, location = $3, creator_id = $4
+        WHERE id = $5
+        RETURNING *
+    `, [event_date, number_of_fields, location, creator_id, eventId])
+      .then(res => {
+        return res.rows[0]
+      })
+  },
+
   findMostRecentPastEvent() {
     return global.client.query(`
         SELECT *

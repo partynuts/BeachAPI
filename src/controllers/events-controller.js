@@ -11,6 +11,7 @@ const {
   findEventById,
   createCalendarEvent,
   checkIfGuestsAreWelcome,
+  updateEvent,
   SIGNUP_ALLOWED,
   SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP,
   SIGNUP_FORBIDDEN_MAX_REACHED,
@@ -53,6 +54,20 @@ controller.post("/events", async (req, res) => {
 
   const sentNotifications = Notification.sendPushNotification(`New event for ${newEvent.event_date.toLocaleDateString()}`, notificationTokens, newEvent.id);
   res.status(201).json(newEvent)
+});
+
+controller.put("/events", async (req, res) => {
+  console.log("-------UPDATING EVENT IN CONTROLLER-------", req.body)
+  if (!req.body.eventId) {
+    return res.status(400).json({ errorMsg: "Event does not exist" })
+  }
+  const updatedEvent = await updateEvent(req.body);
+  console.log("-------UPDATED EVENT----- ", updatedEvent);
+  const allUsersWithToken = Array.from(await getAllUsersWithToken());
+  console.log("AAAAALL THE USERS WITH TOKEN", allUsersWithToken)
+  const notificationTokens = allUsersWithToken.map(user => user.notifications_token)
+  const sentNotifications = Notification.sendPushNotification(`Event update ${updatedEvent.event_date.toLocaleDateString()}`, notificationTokens, updatedEvent.id);
+  res.status(201).json(updatedEvent)
 });
 
 controller.post("/events/:eventId/signup", async (req, res) => {
