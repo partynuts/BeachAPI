@@ -12,9 +12,18 @@ describe("events controller", () => {
     app = await App({ connectionString: process.env.DATABASE_URL, database: "beachapptest" });
 
     await sync({ force: true });
+
+    sinon.stub(Event, 'getParticipationCondition').returns(
+      {
+        numberOfFields: 2,
+        maxNumberOfParticipants: 2
+      })
   });
 
-  afterEach(() => global.client.end());
+  afterEach(async () => {
+    await global.client.end();
+    Event.getParticipationCondition.restore()
+  });
 
   describe("GET /events", () => {
     it("returns empty arrays if no events have been created yet", () =>
@@ -146,7 +155,10 @@ describe("events controller", () => {
             number_of_fields: 2,
             location: "irgendwo",
             creator_id: user.id,
-            participants: ["somebody else"]
+            participants: [{
+              "guests": 0,
+              "username": "somebody else"
+            }]
           },
           nextEvents: []
         });
@@ -232,9 +244,9 @@ describe("events controller", () => {
             {
               ...nextEvents[0],
               event_date: '2120-04-14T22:00:00.000Z',
-              participants: [user.username, otherUser.username]
+              participants: [{guests: 0, username: user.username}, {guests: 0, username: otherUser.username}]
             },
-            { ...nextEvents[1], event_date: '2120-04-15T22:00:00.000Z', participants: [otherUser.username] }
+            { ...nextEvents[1], event_date: '2120-04-15T22:00:00.000Z', participants: [{guests: 0, username: otherUser.username}] }
           ]
         });
     });
@@ -290,20 +302,20 @@ describe("events controller", () => {
           pastEvent: {
             ...pastEvent,
             event_date: '2020-03-14T23:00:00.000Z',
-            participants: [otherUser.username],
+            participants: [{guests: 0, username: otherUser.username}],
             courtPrice: 20
           },
           nextEvents: [
             {
               ...nextEvents[0],
               event_date: '2120-04-14T22:00:00.000Z',
-              participants: [user.username, otherUser.username],
+              participants: [{guests: 0, username: user.username}, {guests: 0, username: otherUser.username}],
               courtPrice: 20
             },
             {
               ...nextEvents[1],
               event_date: '2120-04-15T22:00:00.000Z',
-              participants: [otherUser.username],
+              participants: [{guests: 0, username: otherUser.username}],
               courtPrice: 36
             }
           ]

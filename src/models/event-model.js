@@ -69,19 +69,19 @@ const Event = module.exports = {
     const participationConditions = [
       {
         numberOfFields: 1,
-        maxNumberOfParticipants: 2
+        maxNumberOfParticipants: 6
       },
       {
         numberOfFields: 2,
-        maxNumberOfParticipants: 3
+        maxNumberOfParticipants: 10
       },
       {
         numberOfFields: 3,
-        maxNumberOfParticipants: 5
+        maxNumberOfParticipants: 15
       },
       {
         numberOfFields: 4,
-        maxNumberOfParticipants: 2
+        maxNumberOfParticipants: 20
       }
     ];
 

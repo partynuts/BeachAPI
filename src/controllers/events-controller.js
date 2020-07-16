@@ -24,7 +24,10 @@ const {
   getAllUsersWithToken,
   findUserById
 } = require("../models/user-model");
-const { findCourtPriceByProviderName, findCourtProviderByName } = require("../models/court-model");
+const {
+  findCourtPriceByProviderName,
+  findCourtProviderByName
+} = require("../models/court-model");
 const {
   enrollUserForEvent,
   addParticipants,
@@ -44,15 +47,10 @@ controller.post("/events", async (req, res) => {
 
   const newEvent = await createEvent(req.body);
   const increasedBookingCount = await addBookingCountToUser(req.body.creator_id);
-  // console.log("HAS BOOKING COUNT INCREASED FOR ", req.body.creator_id, increasedBookingCount);
-  // console.log("-------NEW EVENT----- ", newEvent);
-
   const allUsersWithToken = Array.from(await getAllUsersWithToken());
-  // console.log("AAAAALL THE USERS WITH TOKEN", allUsersWithToken)
   const notificationTokens = allUsersWithToken.filter(user => user.id !== req.body.creator_id).map(user => user.notifications_token)
-  // console.log("@@@@@@@@@@@ NOTIFICTAIONS TOKENS @@@@@@", notificationTokens);
-
   const sentNotifications = Notification.sendPushNotification(`New event for ${newEvent.event_date.toLocaleDateString()}`, notificationTokens, newEvent.id);
+
   res.status(201).json(newEvent)
 });
 
@@ -62,17 +60,17 @@ controller.put("/events", async (req, res) => {
     return res.status(400).json({ errorMsg: "Event does not exist" })
   }
   const updatedEvent = await updateEvent(req.body);
+
   console.log("-------UPDATED EVENT----- ", updatedEvent);
+
   const allUsersWithToken = Array.from(await getAllUsersWithToken());
-  console.log("AAAAALL THE USERS WITH TOKEN", allUsersWithToken)
+  console.log("AAAAALL THE USERS WITH TOKEN", allUsersWithToken);
   const notificationTokens = allUsersWithToken.map(user => user.notifications_token)
   const sentNotifications = Notification.sendPushNotification(`Event update ${updatedEvent.event_date.toLocaleDateString()}`, notificationTokens, updatedEvent.id);
   res.status(201).json(updatedEvent)
 });
 
 controller.post("/events/:eventId/signup", async (req, res) => {
-  // console.log("-------SIGNING UP FOR EVENT IN CONTROLLER-------", req.body)
-
   if (!req.body.userId) {
     return res.sendStatus(400)
   }
@@ -93,7 +91,6 @@ controller.post("/events/:eventId/signup", async (req, res) => {
 
   const newParticipant = await enrollUserForEvent(req.body.userId, foundEvent);
 
-  // console.log("NEW PARTICIPANTS", newParticipant);
   return res.status(201).json(await addParticipants(foundEvent))
 });
 
@@ -166,7 +163,7 @@ controller.post("/events/:eventId/cancel", async (req, res) => {
   TODO: Write many many tests and refactor it :)
 */
 controller.get("/events", async (req, res) => {
-  console.log("-------GETTING EVENT IN CONTROLLER-------")
+  console.log("-------GETTING EVENT IN CONTROLLER-------");
 
   const pastEvents = await findMostRecentPastEvent();
   const pastEvent = pastEvents[0] || null;
