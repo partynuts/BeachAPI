@@ -12,7 +12,7 @@ controller.post("/users", async (req, res) => {
   }
 
   const foundUserByEmailAndUsername = await findUserByEmailAndUsername(req.body.username, req.body.email);
-  // console.log("FOUND USER EMAIL", foundUserByEmailAndUsername)
+
   if (foundUserByEmailAndUsername) {
     return res.status(200).json(foundUserByEmailAndUsername);
   }

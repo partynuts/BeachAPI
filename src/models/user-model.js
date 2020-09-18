@@ -109,12 +109,12 @@ const user = module.exports = {
       })
   },
 
-  createUser({ username, email }) {
+  createUser({ username, email, paypal_username }) {
     return global.client.query(`
-        INSERT into users (username, email)
-        VALUES ($1, $2)
+        INSERT into users (username, email, paypal_username)
+        VALUES ($1, $2, $3)
         RETURNING *
-    `, [username, email])
+    `, [username, email, paypal_username || null])
       .then(res => {
         return res.rows[0]
       })
