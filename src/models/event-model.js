@@ -4,8 +4,8 @@ const REDUCED_SIGNUP_ALLOWED = 'reducedSignupAllowed';
 const SIGNUP_FORBIDDEN_MAX_REACHED = 'signupForbiddenMaxReached';
 const SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP = 'signupForbiddenAlreadySignedUp';
 const SIGNUP_FORBIDDEN_NOT_SIGNED_UP = 'signupForbiddenNotSignedUp';
-const { findCourtProviderByName } = require("../models/court-model");
-const { getParticipantsCount, getEnrollmentsForEvent } = require("../models/enrollment-model");
+const { findCourtProviderByName, findCourtPriceByProviderName } = require("../models/court-model");
+const { getParticipantsCount, getEnrollmentsForEvent, addParticipants } = require("../models/enrollment-model");
 
 const Event = module.exports = {
   SIGNUP_ALLOWED,
@@ -193,5 +193,14 @@ const Event = module.exports = {
         resolve(value)
       });
     });
+  },
+
+  async enrichEvent(event) {
+    const courtPrice = await findCourtPriceByProviderName(event.location);
+
+    await addParticipants(event);
+    event.courtPrice = Number(courtPrice.price);
+
+    return event;
   }
 };

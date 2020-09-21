@@ -16,7 +16,8 @@ const {
   SIGNUP_FORBIDDEN_ALREADY_SIGNED_UP,
   SIGNUP_FORBIDDEN_MAX_REACHED,
   SIGNUP_FORBIDDEN_NOT_SIGNED_UP,
-  REDUCED_SIGNUP_ALLOWED
+  REDUCED_SIGNUP_ALLOWED,
+  enrichEvent
 } = require("../models/event-model")
 const {
   findUsersByIds,
@@ -51,7 +52,7 @@ controller.post("/events", async (req, res) => {
   const notificationTokens = allUsersWithToken.filter(user => user.id !== req.body.creator_id).map(user => user.notifications_token)
   const sentNotifications = Notification.sendPushNotification(`New event for ${newEvent.event_date.toLocaleDateString()}`, notificationTokens, newEvent.id);
 
-  res.status(201).json(newEvent)
+  res.status(201).json(await enrichEvent(newEvent))
 });
 
 controller.put("/events", async (req, res) => {
@@ -67,7 +68,7 @@ controller.put("/events", async (req, res) => {
   console.log("AAAAALL THE USERS WITH TOKEN", allUsersWithToken);
   const notificationTokens = allUsersWithToken.map(user => user.notifications_token)
   const sentNotifications = Notification.sendPushNotification(`Event update ${updatedEvent.event_date.toLocaleDateString()}`, notificationTokens, updatedEvent.id);
-  res.status(201).json(updatedEvent)
+  res.status(201).json(await enrichEvent(updatedEvent))
 });
 
 controller.post("/events/:eventId/signup", async (req, res) => {
@@ -90,12 +91,8 @@ controller.post("/events/:eventId/signup", async (req, res) => {
   }
 
   const newParticipant = await enrollUserForEvent(req.body.userId, foundEvent);
-  await addParticipants(foundEvent);
 
-  const courtPricePast = await findCourtPriceByProviderName(foundEvent.location);
-
-  foundEvent.courtPrice = Number(courtPricePast.price);
-  return res.status(201).json(foundEvent)
+  return res.status(201).json(await enrichEvent(foundEvent))
 });
 
 controller.put("/events/:eventId/guests", async (req, res) => {
@@ -109,20 +106,14 @@ controller.put("/events/:eventId/guests", async (req, res) => {
   }
 
   const enrollment = await getSingleEnrollmentForEvent(foundEvent.id, req.body.userId);
-
   const guestWelcomeChecked = await checkIfGuestsAreWelcome(foundEvent, req.body.userId, req.body.guestCount)
-  const courtPricePast = await findCourtPriceByProviderName(foundEvent.location);
-
-  foundEvent.courtPrice = Number(courtPricePast.price);
-  await addParticipants(foundEvent);
 
   if (guestWelcomeChecked.status === SIGNUP_FORBIDDEN_MAX_REACHED) {
-
     return res.status(403).json({
       enrollment,
       msg: "Maximum number of participants is already reached. You cannot sign up anyone for this event at the moment.",
       totalParticipants: await getParticipantsCount(foundEvent.id),
-      eventData: foundEvent
+      eventData: await enrichEvent(foundEvent)
     });
   }
   if (guestWelcomeChecked.status === SIGNUP_FORBIDDEN_NOT_SIGNED_UP) {
@@ -130,38 +121,27 @@ controller.put("/events/:eventId/guests", async (req, res) => {
       enrollment,
       msg: "You are not signed up for this event!",
       totalParticipants: await getParticipantsCount(foundEvent.id),
-      eventData: foundEvent
-
+      eventData: await enrichEvent(foundEvent)
     });
   }
   if (guestWelcomeChecked.status === REDUCED_SIGNUP_ALLOWED) {
     const enrollmentFoo = await setGuestsForEnrollment(enrollment, guestWelcomeChecked.capacity + enrollment.guests);
-    const courtPricePastFoo = await findCourtPriceByProviderName(foundEvent.location);
-
-    foundEvent.courtPrice = Number(courtPricePastFoo.price);
-    await addParticipants(foundEvent);
 
     return res.json({
       enrollment: enrollmentFoo,
       msg: `The capacity was lower than your request. You'll bring ${guestWelcomeChecked.capacity + enrollment.guests} guests.`,
       totalParticipants: await getParticipantsCount(foundEvent.id),
-      eventData: foundEvent
-
+      eventData: await enrichEvent(foundEvent)
     })
   }
 
-
-const enrollmentFoo = await setGuestsForEnrollment(enrollment, req.body.guestCount);
-  const courtPricePastFoo = await findCourtPriceByProviderName(foundEvent.location);
-
-  foundEvent.courtPrice = Number(courtPricePastFoo.price);
-  await addParticipants(foundEvent);
+  const enrollmentFoo = await setGuestsForEnrollment(enrollment, req.body.guestCount);
 
   return res.json({
     enrollment: enrollmentFoo,
     msg: `${req.body.guestCount} guests have been added.`,
     totalParticipants: await getParticipantsCount(foundEvent.id),
-    eventData: foundEvent
+    eventData: await enrichEvent(foundEvent)
   })
 });
 
@@ -174,7 +154,7 @@ controller.post("/events/:eventId/cancel", async (req, res) => {
   const eventData = await findEventById(req.params.eventId);
 
   await removeUserFromEvent(req.body.userId, eventData);
-  await addParticipants(eventData);
+  await enrichEvent(eventData);
 
   console.log("EVENT DATA", (new Date(eventData.event_date)).toLocaleDateString('de-DE'));
 
