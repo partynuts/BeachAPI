@@ -90,8 +90,12 @@ controller.post("/events/:eventId/signup", async (req, res) => {
   }
 
   const newParticipant = await enrollUserForEvent(req.body.userId, foundEvent);
+  await addParticipants(foundEvent);
 
-  return res.status(201).json(await addParticipants(foundEvent))
+  const courtPricePast = await findCourtPriceByProviderName(foundEvent.location);
+
+  foundEvent.courtPrice = Number(courtPricePast.price);
+  return res.status(201).json(foundEvent)
 });
 
 controller.put("/events/:eventId/guests", async (req, res) => {
@@ -107,33 +111,57 @@ controller.put("/events/:eventId/guests", async (req, res) => {
   const enrollment = await getSingleEnrollmentForEvent(foundEvent.id, req.body.userId);
 
   const guestWelcomeChecked = await checkIfGuestsAreWelcome(foundEvent, req.body.userId, req.body.guestCount)
+  const courtPricePast = await findCourtPriceByProviderName(foundEvent.location);
+
+  foundEvent.courtPrice = Number(courtPricePast.price);
+  await addParticipants(foundEvent);
 
   if (guestWelcomeChecked.status === SIGNUP_FORBIDDEN_MAX_REACHED) {
+
     return res.status(403).json({
       enrollment,
       msg: "Maximum number of participants is already reached. You cannot sign up anyone for this event at the moment.",
-      totalParticipants: await getParticipantsCount(foundEvent.id)
-
+      totalParticipants: await getParticipantsCount(foundEvent.id),
+      eventData: foundEvent
     });
   }
   if (guestWelcomeChecked.status === SIGNUP_FORBIDDEN_NOT_SIGNED_UP) {
     return res.status(403).json({
       enrollment,
       msg: "You are not signed up for this event!",
-      totalParticipants: await getParticipantsCount(foundEvent.id)
+      totalParticipants: await getParticipantsCount(foundEvent.id),
+      eventData: foundEvent
+
     });
   }
   if (guestWelcomeChecked.status === REDUCED_SIGNUP_ALLOWED) {
+    const enrollmentFoo = await setGuestsForEnrollment(enrollment, guestWelcomeChecked.capacity + enrollment.guests);
+    const courtPricePastFoo = await findCourtPriceByProviderName(foundEvent.location);
+
+    foundEvent.courtPrice = Number(courtPricePastFoo.price);
+    await addParticipants(foundEvent);
+
     return res.json({
-      enrollment: await setGuestsForEnrollment(enrollment, guestWelcomeChecked.capacity + enrollment.guests),
+      enrollment: enrollmentFoo,
       msg: `The capacity was lower than your request. You'll bring ${guestWelcomeChecked.capacity + enrollment.guests} guests.`,
-      totalParticipants: await getParticipantsCount(foundEvent.id)
+      totalParticipants: await getParticipantsCount(foundEvent.id),
+      eventData: foundEvent
+
     })
   }
+
+
+const enrollmentFoo = await setGuestsForEnrollment(enrollment, req.body.guestCount);
+  const courtPricePastFoo = await findCourtPriceByProviderName(foundEvent.location);
+
+  foundEvent.courtPrice = Number(courtPricePastFoo.price);
+  await addParticipants(foundEvent);
+
   return res.json({
-    enrollment: await setGuestsForEnrollment(enrollment, req.body.guestCount),
+    enrollment: enrollmentFoo,
     msg: `${req.body.guestCount} guests have been added.`,
-    totalParticipants: await getParticipantsCount(foundEvent.id)
+    totalParticipants: await getParticipantsCount(foundEvent.id),
+    eventData: foundEvent
   })
 });
 
@@ -206,9 +234,7 @@ controller.get("/events", async (req, res) => {
 });
 
 controller.get("/events/:eventId/calendar", async (req, res) => {
-  console.log("CREATING iCAL Event", req.params.eventId);
   const foundEvent = await findEventById(req.params.eventId);
-  console.log("EVENT DATA", foundEvent)
 
   const value = await createCalendarEvent(foundEvent)
   console.log("VALUE OF CREATE CAL EVE", value)
@@ -218,6 +244,16 @@ controller.get("/events/:eventId/calendar", async (req, res) => {
   console.log("iCal String", value);
   return res.send(value);
 
+});
+
+controller.get("/events/:eventId", async (req, res) => {
+  const foundEvent = await findEventById(req.params.eventId);
+  const courtPricePast = await findCourtPriceByProviderName(foundEvent.location);
+
+  foundEvent.courtPrice = Number(courtPricePast.price);
+  await addParticipants(foundEvent);
+
+  return res.status(200).json(foundEvent);
 });
 
 module.exports = controller;
