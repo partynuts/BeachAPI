@@ -340,7 +340,8 @@ describe("events controller", () => {
           number_of_fields: 2,
           location: "Beach61",
           creator_id: 47,
-          participants: null,
+          courtPrice: 22,
+          participants: [],
         })
     });
 
