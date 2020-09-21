@@ -303,14 +303,14 @@ describe("events controller", () => {
             ...pastEvent,
             event_date: '2020-03-14T23:00:00.000Z',
             participants: [{guests: 0, username: otherUser.username}],
-            courtPrice: 20
+            courtPrice: 22
           },
           nextEvents: [
             {
               ...nextEvents[0],
               event_date: '2120-04-14T22:00:00.000Z',
               participants: [{guests: 0, username: user.username}, {guests: 0, username: otherUser.username}],
-              courtPrice: 20
+              courtPrice: 22
             },
             {
               ...nextEvents[1],
