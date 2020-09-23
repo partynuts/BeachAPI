@@ -66,7 +66,9 @@ controller.put("/events", async (req, res) => {
 
   const allUsersWithToken = Array.from(await getAllUsersWithToken());
   console.log("AAAAALL THE USERS WITH TOKEN", allUsersWithToken);
-  const notificationTokens = allUsersWithToken.map(user => user.notifications_token)
+  // const notificationTokens = allUsersWithToken.map(user => user.notifications_token);
+  const notificationTokens = allUsersWithToken.filter(user => user.id !== req.body.userId).map(user => user.notifications_token)
+console.log("############################### NOTI TOKEN ########################", notificationTokens)
   const sentNotifications = Notification.sendPushNotification(`Event update ${updatedEvent.event_date.toLocaleDateString()}`, notificationTokens, updatedEvent.id);
   res.status(201).json(await enrichEvent(updatedEvent))
 });
@@ -232,6 +234,7 @@ controller.get("/events/:eventId", async (req, res) => {
 
   foundEvent.courtPrice = Number(courtPricePast.price);
   await addParticipants(foundEvent);
+   console.log("SINGLE EVENT", foundEvent)
 
   return res.status(200).json(foundEvent);
 });

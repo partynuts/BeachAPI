@@ -37,8 +37,10 @@ const Enrollment = module.exports = {
     const enrollments = await Enrollment.getEnrollmentsForEvent(event.id);
     const userIds = enrollments.map(enrollment => enrollment.user_id);
     const enrollmentsUsers = await findUsersByIds(userIds);
+    console.log("ENROLLMENT USERS", enrollmentsUsers)
     const allParticipants = enrollmentsUsers.map(user => ({
       username: user.username,
+      paypal_username: user.paypal_username,
       guests: enrollments.find(({ user_id }) => user_id === user.id).guests
     }));
 
