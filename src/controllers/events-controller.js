@@ -96,7 +96,7 @@ controller.post("/events/:eventId/signup", async (req, res) => {
   const notificationTokens = allUsersWithToken.filter(user => user.id !== req.body.userId).map(user => user.notifications_token)
 
   const newParticipant = await enrollUserForEvent(req.body.userId, foundEvent);
-  const sentNotifications = Notification.sendPushNotification("New signup", notificationTokens, req.params.eventId);
+  // const sentNotifications = Notification.sendPushNotification("New signup", notificationTokens, req.params.eventId);
 
   return res.status(201).json(await enrichEvent(foundEvent))
 });
