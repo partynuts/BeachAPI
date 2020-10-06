@@ -92,7 +92,11 @@ controller.post("/events/:eventId/signup", async (req, res) => {
     return res.status(403).json({ msg: "Maximum number of participants is already reached. You cannot sign up for this event at the moment." });
   }
 
+  const allUsersWithToken = Array.from(await getAllUsersWithToken());
+  const notificationTokens = allUsersWithToken.filter(user => user.id !== req.body.userId).map(user => user.notifications_token)
+
   const newParticipant = await enrollUserForEvent(req.body.userId, foundEvent);
+  const sentNotifications = Notification.sendPushNotification("New signup", notificationTokens, req.params.eventId);
 
   return res.status(201).json(await enrichEvent(foundEvent))
 });
