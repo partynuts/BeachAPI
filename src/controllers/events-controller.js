@@ -230,11 +230,12 @@ controller.get("/events/:eventId/calendar", async (req, res) => {
 
 controller.get("/events/:eventId", async (req, res) => {
   const foundEvent = await findEventById(req.params.eventId);
-  const courtPricePast = await findCourtPriceByProviderName(foundEvent.location);
+  // const courtPricePast = await findCourtPriceByProviderName(foundEvent.location);
+  // await addParticipants(foundEvent);
+  // foundEvent.courtPrice = Number(courtPricePast.price);
+  //  console.log("SINGLE EVENT", foundEvent);
 
-  foundEvent.courtPrice = Number(courtPricePast.price);
-  await addParticipants(foundEvent);
-   console.log("SINGLE EVENT", foundEvent);
+  await enrichEvent(foundEvent);
 
   return res.status(200).json(foundEvent);
 });
