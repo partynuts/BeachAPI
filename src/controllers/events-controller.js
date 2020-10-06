@@ -234,7 +234,7 @@ controller.get("/events/:eventId", async (req, res) => {
 
   foundEvent.courtPrice = Number(courtPricePast.price);
   await addParticipants(foundEvent);
-   console.log("SINGLE EVENT", foundEvent)
+   console.log("SINGLE EVENT", foundEvent);
 
   return res.status(200).json(foundEvent);
 });
