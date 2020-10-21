@@ -41,10 +41,12 @@ controller.get("/users", async (req, res) => {
 
 controller.patch("/users/:userId", async (req, res) => {
   // console.log("set notification permission token")
+  console.log("UPDATING USER, User id", req.params.userId)
   const foundUser = await findUserById(req.params.userId);
   if (!foundUser) {
     return res.status(404).json({msg: "User not found!"})
   }
+  console.log("UPDATE USER", req.body)
 
   if (req.body && Object.keys(req.body).length > 0) {
     const updatedUserData = await updateUser(req.body, req.params.userId);
