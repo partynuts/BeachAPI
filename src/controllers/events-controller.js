@@ -58,9 +58,13 @@ controller.post("/events", async (req, res) => {
 
 controller.delete("/events/:eventId", async (req, res) => {
   console.log("-----------DELETING EVENT------------", req.params.eventId);
-  const removed = await removeEvent(req.params.eventId);
+  const foundEvent = await findEventById(req.params.eventId);
+  if (!req.params.eventId || !foundEvent) {
+    res.status(404).json({errorMessage: "Event does not exist."})
+  }
 
-  console.log(">>>> REMOVED", removed)
+  await removeEvent(req.params.eventId);
+
   res.sendStatus(204);
 });
 
