@@ -17,7 +17,8 @@ const {
   SIGNUP_FORBIDDEN_MAX_REACHED,
   SIGNUP_FORBIDDEN_NOT_SIGNED_UP,
   REDUCED_SIGNUP_ALLOWED,
-  enrichEvent
+  enrichEvent,
+  removeEvent
 } = require("../models/event-model")
 const {
   findUsersByIds,
@@ -55,6 +56,14 @@ controller.post("/events", async (req, res) => {
   res.status(201).json(await enrichEvent(newEvent))
 });
 
+controller.delete("/events/:eventId", async (req, res) => {
+  console.log("-----------DELETING EVENT------------", req.params.eventId);
+  const removed = await removeEvent(req.params.eventId);
+
+  console.log(">>>> REMOVED", removed)
+  res.sendStatus(204);
+});
+
 controller.put("/events", async (req, res) => {
   console.log("-------UPDATING EVENT IN CONTROLLER-------", req.body)
   if (!req.body.eventId) {
@@ -68,7 +77,7 @@ controller.put("/events", async (req, res) => {
   console.log("AAAAALL THE USERS WITH TOKEN", allUsersWithToken);
   // const notificationTokens = allUsersWithToken.map(user => user.notifications_token);
   const notificationTokens = allUsersWithToken.filter(user => user.id !== req.body.userId).map(user => user.notifications_token)
-console.log("############################### NOTI TOKEN ########################", notificationTokens)
+  console.log("############################### NOTI TOKEN ########################", notificationTokens)
   const sentNotifications = Notification.sendPushNotification(`Event update ${updatedEvent.event_date.toLocaleDateString()}`, notificationTokens, updatedEvent.id);
   res.status(201).json(await enrichEvent(updatedEvent))
 });

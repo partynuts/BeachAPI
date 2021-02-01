@@ -26,10 +26,25 @@ const Event = module.exports = {
       })
   },
 
-  updateEvent({event_date, number_of_fields, location, creator_id, eventId}) {
+  removeEvent(eventId) {
+    return global.client.query(`
+        DELETE
+        FROM events
+        WHERE id = $1
+    `, [eventId])
+      .then(res => {
+        console.log("<<<< RESPONSE FROM DELETING EVENT IN MODEL >>>>", res)
+        return res
+      })
+  },
+
+  updateEvent({ event_date, number_of_fields, location, creator_id, eventId }) {
     return global.client.query(`
         UPDATE events
-        SET event_date = $1, number_of_fields = $2, location = $3, creator_id = $4
+        SET event_date       = $1,
+            number_of_fields = $2,
+            location         = $3,
+            creator_id       = $4
         WHERE id = $5
         RETURNING *
     `, [event_date, number_of_fields, location, creator_id, eventId])
@@ -166,8 +181,6 @@ const Event = module.exports = {
     const startYear = event.event_date.getFullYear()
     const startHour = event.event_date.getHours()
     const startMinute = event.event_date.getMinutes()
-    console.log("EVENT START DAY", startDay, startMonth, startYear, startHour, startMinute);
-    console.log("TYPE OF START DAY", typeof startDay);
 
     const calEvent = {
       start: [startYear, startMonth, startDay, startHour, startMinute],
@@ -181,8 +194,7 @@ const Event = module.exports = {
       alarms: [{ action: 'display', trigger: { hours: 2, minutes: 30, before: true } },
         { action: 'display', trigger: { hours: 24, minutes: 0, before: true } }]
     };
-    console.log("CALENDAR EVENT OBJECT", calEvent);
-    console.log("EVENT START", calEvent.start);
+
     return new Promise((resolve, reject) => {
       const iCal = ics.createEvent(calEvent, (error, value) => {
         if (error) {

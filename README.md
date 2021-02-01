@@ -1,4 +1,23 @@
 # BeachAPI
+
+## Start dev server
+check if postgres is running. In your command line run
+
+
+``brew services list``
+
+If not, start it.  
+
+`` brew services restart postgresql``
+
+If there was an update of the postgresql version then you might need to create a new db.
+
+To start the server run
+
+``yarn start``
+
+
+
 ## Beach-Time App Privacy Policy / Datenschutzerklärung
 
 ###Datenschutzerklärung
