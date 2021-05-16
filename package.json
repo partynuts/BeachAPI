@@ -13,6 +13,7 @@
     "coverage": "nyc yarn test"
   },
   "dependencies": {
+    "@robotty/umzug-postgres-storage": "^3.0.4",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "expo-server-sdk": "^3.4.0",
@@ -21,8 +22,7 @@
     "morgan": "^1.9.1",
     "pg": "^7.18.2",
     "require-dir-all": "^0.4.15",
-    "umzug": "^2.3.0",
-    "umzug-pg-storage": "^1.0.0"
+    "umzug": "^2.3.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
@@ -30,5 +30,8 @@
     "nyc": "^15.1.0",
     "sinon": "^9.0.2",
     "supertest": "^4.0.2"
+  },
+  "engines": {
+    "node": ">=10.17.0"
   }
 }

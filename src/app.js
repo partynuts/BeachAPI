@@ -5,7 +5,7 @@ const morgan = require("morgan");
 const requireAll = require("require-dir-all");
 const { Client } = require('pg');
 const cors = require("cors");
-const secrets = require('../secrets.json')
+const secrets = require('../secrets.json');
 
 
 module.exports = async ({ database = secrets.DB, connectionString } = {}) => {
