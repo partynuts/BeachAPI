@@ -244,9 +244,13 @@ describe("events controller", () => {
             {
               ...nextEvents[0],
               event_date: '2120-04-14T22:00:00.000Z',
-              participants: [{guests: 0, username: user.username}, {guests: 0, username: otherUser.username}]
+              participants: [{ guests: 0, username: user.username }, { guests: 0, username: otherUser.username }]
             },
-            { ...nextEvents[1], event_date: '2120-04-15T22:00:00.000Z', participants: [{guests: 0, username: otherUser.username}] }
+            {
+              ...nextEvents[1],
+              event_date: '2120-04-15T22:00:00.000Z',
+              participants: [{ guests: 0, username: otherUser.username }]
+            }
           ]
         });
     });
@@ -302,20 +306,20 @@ describe("events controller", () => {
           pastEvent: {
             ...pastEvent,
             event_date: '2020-03-14T23:00:00.000Z',
-            participants: [{guests: 0, username: otherUser.username}],
+            participants: [{ guests: 0, username: otherUser.username }],
             courtPrice: 22
           },
           nextEvents: [
             {
               ...nextEvents[0],
               event_date: '2120-04-14T22:00:00.000Z',
-              participants: [{guests: 0, username: user.username}, {guests: 0, username: otherUser.username}],
+              participants: [{ guests: 0, username: user.username }, { guests: 0, username: otherUser.username }],
               courtPrice: 22
             },
             {
               ...nextEvents[1],
               event_date: '2120-04-15T22:00:00.000Z',
-              participants: [{guests: 0, username: otherUser.username}],
+              participants: [{ guests: 0, username: otherUser.username }],
               courtPrice: 36
             }
           ]
