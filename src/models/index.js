@@ -20,7 +20,10 @@ module.exports = {
       poolConnection = await dbPool.connect();
     }
 
-    const storage = new PGStorage(poolConnection);
+    const storage = new PGStorage(poolConnection, {
+      tableName: "migrations",
+      columnName: "migration_name"
+    });
     const umzug = new Umzug({
       migrations: { glob: "migrations/*.js" },
       storage,

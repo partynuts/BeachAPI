@@ -10,7 +10,7 @@ const secrets = require("../secrets.json");
 module.exports = async ({ database = secrets.DB, connectionString } = {}) => {
   app.use(morgan("dev"));
   app.use(bodyParser.json());
-  
+
   const dbConfig = connectionString
     ? { connectionString }
     : {
@@ -18,7 +18,6 @@ module.exports = async ({ database = secrets.DB, connectionString } = {}) => {
         password: secrets.PW,
         database,
       };
-  console.log(dbConfig);
   global.client = new Client(dbConfig);
   console.log("DATABASE CONNECTION STUFF", dbConfig);
   const oldPoolQuery = global.client.query;
