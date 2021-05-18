@@ -19,7 +19,6 @@ module.exports = async ({ database = secrets.DB, connectionString } = {}) => {
         database,
       };
   global.client = new Client(dbConfig);
-  console.log("DATABASE CONNECTION STUFF", dbConfig);
   const oldPoolQuery = global.client.query;
   global.client.query = (...args) => {
     console.log("QUERY:", args);
