@@ -5,19 +5,19 @@ const morgan = require("morgan");
 const requireAll = require("require-dir-all");
 const { Client } = require("pg");
 const cors = require("cors");
-const secrets = require("../secrets.json");
 
-module.exports = async ({ database = secrets.DB, connectionString } = {}) => {
+module.exports = async ({ database = process.env.DATABASE, connectionString } = {}) => {
   app.use(morgan("dev"));
   app.use(bodyParser.json());
 
   const dbConfig = connectionString
     ? { connectionString }
     : {
-        user: secrets.USER,
-        password: secrets.PW,
+        user: process.env.USER,
+        password: process.env.PASSWORD,
         database,
       };
+
   global.client = new Client(dbConfig);
   const oldPoolQuery = global.client.query;
   global.client.query = (...args) => {

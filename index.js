@@ -1,4 +1,6 @@
 const App = require("./src/app");
+const dotenv = require('dotenv');
+dotenv.config();
 
 (async () => {
   const app = await App({ connectionString: process.env.DATABASE_URL });
