@@ -6,7 +6,7 @@ const requireAll = require("require-dir-all");
 const { Client } = require("pg");
 const cors = require("cors");
 
-module.exports = async ({ database = "beachapp", connectionString } = {}) => {
+module.exports = async ({ connectionString } = {}) => {
   // app.use(morgan("dev"));
   app.use(bodyParser.json());
   console.log("CONNECTING")
@@ -15,7 +15,7 @@ module.exports = async ({ database = "beachapp", connectionString } = {}) => {
     : {
       user: process.env.USER,
       password: process.env.PASSWORD,
-      database
+      database: process.env.DATABASE
     };
   console.log("dbConfig", dbConfig)
 
@@ -28,12 +28,8 @@ module.exports = async ({ database = "beachapp", connectionString } = {}) => {
     return oldPoolQuery.apply(global.client, args);
   };
   console.log("BEFORE CONNECT")
-  try {
-    await global.client.connect().catch(console.log);
+    await global.client.connect();
     console.log("AFTER CONNECT")
-  } catch (e) {
-    console.log("ERROR", e)
-  }
 
   app.use(cors());
 
