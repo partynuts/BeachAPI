@@ -11,11 +11,11 @@ module.exports = async ({ database = process.env.DATABASE, connectionString } = 
   app.use(bodyParser.json());
   console.log("CONNECTING")
   const dbConfig = connectionString
-    ? { connectionString }
+    ? { connectionString, ssl: true }
     : {
       user: process.env.USER,
       password: process.env.PASSWORD,
-      database,
+      database
     };
   console.log("dbConfig", dbConfig)
 
@@ -27,8 +27,13 @@ module.exports = async ({ database = process.env.DATABASE, connectionString } = 
     console.log("QUERY:", args);
     return oldPoolQuery.apply(global.client, args);
   };
-
-  await global.client.connect().catch(console.log);
+  console.log("BEFORE CONNECT")
+  try {
+    await global.client.connect().catch(console.log);
+    console.log("AFTER CONNECT")
+  } catch (e) {
+    console.log("ERROR", e)
+  }
 
   app.use(cors());
 
