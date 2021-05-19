@@ -27,10 +27,13 @@ module.exports = async ({ database = process.env.DATABASE, connectionString } = 
     console.log("QUERY:", args);
     return oldPoolQuery.apply(global.client, args);
   };
-console.log("BEFORE CONNECT")
-
-  await global.client.connect().catch(console.log);
-  console.log("AFTER CONNECT")
+  console.log("BEFORE CONNECT")
+  try {
+    await global.client.connect().catch(console.log);
+    console.log("AFTER CONNECT")
+  } catch (e) {
+    console.log("ERROR", e)
+  }
 
   app.use(cors());
 
