@@ -6,7 +6,7 @@ const requireAll = require("require-dir-all");
 const { Client } = require("pg");
 const cors = require("cors");
 
-module.exports = async ({ database = process.env.DATABASE, connectionString } = {}) => {
+module.exports = async ({ database = "beachapp", connectionString } = {}) => {
   // app.use(morgan("dev"));
   app.use(bodyParser.json());
   console.log("CONNECTING")
