@@ -11,7 +11,7 @@ module.exports = async ({ connectionString } = {}) => {
   app.use(bodyParser.json());
   console.log("CONNECTING")
   const dbConfig = connectionString
-    ? { connectionString, ssl: true }
+    ? { connectionString, ssl: { rejectUnauthorized: false } }
     : {
       user: process.env.USER,
       password: process.env.PASSWORD,
@@ -28,8 +28,8 @@ module.exports = async ({ connectionString } = {}) => {
     return oldPoolQuery.apply(global.client, args);
   };
   console.log("BEFORE CONNECT", global.client)
-    await global.client.connect();
-    console.log("AFTER CONNECT")
+  await global.client.connect();
+  console.log("AFTER CONNECT")
 
   app.use(cors());
 
