@@ -7,7 +7,7 @@ const { Client } = require("pg");
 const cors = require("cors");
 
 module.exports = async ({ database = process.env.DATABASE, connectionString } = {}) => {
-  app.use(morgan("dev"));
+  // app.use(morgan("dev"));
   app.use(bodyParser.json());
   console.log("CONNECTING")
   const dbConfig = connectionString
