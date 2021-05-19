@@ -27,7 +27,7 @@ module.exports = async ({ connectionString } = {}) => {
     console.log("QUERY:", args);
     return oldPoolQuery.apply(global.client, args);
   };
-  console.log("BEFORE CONNECT")
+  console.log("BEFORE CONNECT", global.client)
     await global.client.connect();
     console.log("AFTER CONNECT")
 
