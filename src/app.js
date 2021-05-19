@@ -6,7 +6,7 @@ const requireAll = require("require-dir-all");
 const { Client } = require("pg");
 const cors = require("cors");
 
-module.exports = async ({ connectionString } = {}) => {
+module.exports = async ({ database = process.env.DATABASE, connectionString } = {}) => {
   // app.use(morgan("dev"));
   app.use(bodyParser.json());
   console.log("CONNECTING")
@@ -15,7 +15,7 @@ module.exports = async ({ connectionString } = {}) => {
     : {
       user: process.env.USER,
       password: process.env.PASSWORD,
-      database: process.env.DATABASE
+      database
     };
   console.log("dbConfig", dbConfig)
 
