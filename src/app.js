@@ -7,9 +7,8 @@ const { Client } = require("pg");
 const cors = require("cors");
 
 module.exports = async ({ database = process.env.DATABASE, connectionString } = {}) => {
-  // app.use(morgan("dev"));
+  app.use(morgan("dev"));
   app.use(bodyParser.json());
-  console.log("CONNECTING")
   const dbConfig = connectionString
     ? { connectionString, ssl: { rejectUnauthorized: false } }
     : {
@@ -17,20 +16,16 @@ module.exports = async ({ database = process.env.DATABASE, connectionString } = 
       password: process.env.PASSWORD,
       database
     };
-  console.log("dbConfig", dbConfig)
 
   global.client = new Client(dbConfig);
   const oldPoolQuery = global.client.query;
-  console.log("oldPoolQuery", oldPoolQuery)
 
   global.client.query = (...args) => {
     console.log("QUERY:", args);
     return oldPoolQuery.apply(global.client, args);
   };
-  console.log("BEFORE CONNECT", global.client)
   await global.client.connect();
   console.log("AFTER CONNECT")
-
   app.use(cors());
 
   Object.values(requireAll("./controllers")).forEach((c) => app.use(c));
